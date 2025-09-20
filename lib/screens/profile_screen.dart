@@ -202,10 +202,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _editField('Current Address', _currentAddress, maxLines: 2),
                   _dropdownField('Participation Area', _participationArea, [
                     'traffic_management',
-                    'school_college_awareness',
-                    'senior_citizen_visits',
-                    'social_media_promotion',
-                    'festival_crowd_management'
+                    'school_awareness',
+                    'senior_citizens',
+                    'social_media_volunteer',
+                    'crowd_management'
                   ], (v) => setState(() => _participationArea = v)),
                   _editField('Occupation', _occupation),
                   _editField('Police Station', _policeStation),

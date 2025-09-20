@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:io';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -52,11 +53,19 @@ class _SignupScreenState extends State<SignupScreen> {
     if (!['Select Police Station', 'Ambernath', 'Badalpur(E)', 'Badalpur(W)', 'Bazarpeth', 'Bhiwandi City', 'Bhoiwada', 'Central', 'Dombivli(Ramnagar)', 'HillLine', 'Kalwa', 'Kapurbawadi', 'Khadakpada', 'Kholsewadi', 'Kongaon', 'Kopari', 'Mahatma Phule Chowk', 'Manpada', 'Mumbra', 'Narpoli', 'Naupada', 'Nizampura', 'Rabodi', 'Shanti Nagar', 'Shil DyaGhar', 'Shivaji Nagar', 'Shrinagar', 'Thane Nagar', 'Tilak Nagar', 'Ulhasnagar', 'Vartak Nagar', 'Vishnu Nagar', 'Vitthalwadi', 'Wagle Estate'].contains(_policeStation)) {
       _policeStation = 'Select Police Station';
     }
+    if (!['Select Blood Group', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].contains(_bloodGroup)) {
+      _bloodGroup = 'Select Blood Group';
+    }
+    if (!['Select Day', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].contains(_selectedDay)) {
+      _selectedDay = 'Select Day';
+    }
   }
   final _qualificationController = TextEditingController();
   final _ngoController = TextEditingController();
-  final _dayTimeController = TextEditingController();
-  final _bloodGroupController = TextEditingController();
+  final _timeController = TextEditingController();
+  String _bloodGroup = 'Select Blood Group';
+  String _selectedDay = 'Select Day';
+  File? _selectedImage;
   String _willingToWork = 'Yes';
   bool _isLoading = false;
 
@@ -77,8 +86,7 @@ class _SignupScreenState extends State<SignupScreen> {
     _confirmPasswordController.dispose();
     _qualificationController.dispose();
     _ngoController.dispose();
-    _dayTimeController.dispose();
-    _bloodGroupController.dispose();
+    _timeController.dispose();
     super.dispose();
   }
 
@@ -307,16 +315,16 @@ class _SignupScreenState extends State<SignupScreen> {
                         // Stack vertically on small screens
                         return Column(
                           children: [
-                            _buildTextField(
-                              controller: _panCardController,
-                              hintText: 'Pan Card Number',
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter PAN card number';
-                                }
-                                return null;
-                              },
-                            ),
+                            // _buildTextField(
+                            //   controller: _panCardController,
+                            //   hintText: 'Pan Card Number',
+                            //   validator: (value) {
+                            //     if (value == null || value.isEmpty) {
+                            //       return 'Please enter PAN card number';
+                            //     }
+                            //     return null;
+                            //   },
+                            // ),
                             const SizedBox(height: 15),
                             _buildTextField(
                               controller: _aadharCardController,
@@ -335,18 +343,18 @@ class _SignupScreenState extends State<SignupScreen> {
                         // Row layout for larger screens
                         return Row(
                           children: [
-                            Expanded(
-                              child: _buildTextField(
-                                controller: _panCardController,
-                                hintText: 'Pan Card Number',
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter PAN card number';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
+                            // Expanded(
+                            //   child: _buildTextField(
+                            //     controller: _panCardController,
+                            //     hintText: 'Pan Card Number',
+                            //     validator: (value) {
+                            //       if (value == null || value.isEmpty) {
+                            //         return 'Please enter PAN card number';
+                            //       }
+                            //       return null;
+                            //     },
+                            //   ),
+                            // ),
                             const SizedBox(width: 15),
                             Expanded(
                               child: _buildTextField(
@@ -386,32 +394,49 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 15),
                   // Day and Time Availability Field
-                  _buildTextField(
-                    controller: _dayTimeController,
-                    hintText: 'Specify Day and Time to work as Police Mitra/Volunteer',
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please specify your availability';
+                  const Text(
+                    'Specify Day and Time to work as Police Mitra/Volunteer',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      if (constraints.maxWidth < 600) {
+                        // Stack vertically on small screens
+                        return Column(
+                          children: [
+                            _buildDayDropdown(),
+                            const SizedBox(height: 15),
+                            _buildTimeField(),
+                          ],
+                        );
+                      } else {
+                        // Row layout for larger screens
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: _buildDayDropdown(),
+                            ),
+                            const SizedBox(width: 15),
+                            Expanded(
+                              child: _buildTimeField(),
+                            ),
+                          ],
+                        );
                       }
-                      return null;
                     },
                   ),
                   const SizedBox(height: 15),
                   // Blood Group Field
-                  _buildTextField(
-                    controller: _bloodGroupController,
-                    hintText: 'Enter Blood Group',
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your blood group';
-                      }
-                      return null;
-                    },
-                  ),
+                  _buildBloodGroupDropdown(),
                   const SizedBox(height: 15),
                   // Willing to Work Dropdown
-                  _buildWillingToWorkDropdown(),
-                  const SizedBox(height: 15),
+                  // _buildWillingToWorkDropdown(),
+                  // const SizedBox(height: 15),
                   // Email and Gender Row
                   LayoutBuilder(
                     builder: (context, constraints) {
@@ -518,10 +543,11 @@ class _SignupScreenState extends State<SignupScreen> {
                                 'gender': _gender,
                                 'qualification': _qualificationController.text,
                                 'ngo_affiliation': _ngoController.text.isNotEmpty ? _ngoController.text : null,
-                                'available_time': _dayTimeController.text,
-                                'blood_group': _bloodGroupController.text,
+                                'available_time': '${_selectedDay} ${_timeController.text}',
+                                'blood_group': _bloodGroup,
                                 'willing_to_work': _willingToWork,
                                 'email': _emailController.text.trim().toLowerCase(),
+                                'police_mitra_acceptance': true,
                               });
                               if (mounted) context.go('/thank-you');
                             } else if (response.user != null && Supabase.instance.client.auth.currentSession == null) {
@@ -595,6 +621,7 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
+ 
   Future<bool> _showAcceptanceDialog() async {
     return await showDialog<bool>(
       context: context,
@@ -627,6 +654,11 @@ class _SignupScreenState extends State<SignupScreen> {
                       value: _accepted4,
                       onChanged: (value) => setState(() => _accepted4 = value ?? false),
                     ),
+                      CheckboxListTile(
+                      title: const Text('Are you willing to work as Police Mitra/Volunteer?.'),
+                      value: _accepted4,
+                      onChanged: (value) => setState(() => _accepted4 = value ?? false),
+                    ),
                   ],
                 ),
               ),
@@ -652,13 +684,13 @@ class _SignupScreenState extends State<SignupScreen> {
       case 'Traffic Management':
         return 'traffic_management';
       case 'School/College Awareness Programs':
-        return 'school_college_awareness';
+        return 'school_awareness';
       case 'Senior Citizen Visits':
-        return 'senior_citizen_visits';
+        return 'senior_citizens';
       case 'Social Media Promotion':
-        return 'social_media_promotion';
+        return 'social_media_volunteer';
       case 'Festival Crowd Management':
-        return 'festival_crowd_management';
+        return 'crowd_management';
       default:
         return 'traffic_management';
     }
@@ -721,6 +753,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     return DropdownButtonFormField<String>(
       value: _gender,
+      isExpanded: true,
       decoration: InputDecoration(
         hintText: 'Select Gender',
         hintStyle: const TextStyle(color: Colors.grey),
@@ -763,6 +796,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     return DropdownButtonFormField<String>(
       value: _occupation,
+      isExpanded: true,
       decoration: InputDecoration(
         hintText: 'Select Occupation',
         hintStyle: const TextStyle(color: Colors.grey),
@@ -817,6 +851,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     return DropdownButtonFormField<String>(
       value: _participation,
+      isExpanded: true,
       decoration: InputDecoration(
         hintText: 'Select Participation Option',
         hintStyle: const TextStyle(color: Colors.grey),
@@ -837,7 +872,7 @@ class _SignupScreenState extends State<SignupScreen> {
           child: Text(
             value,
             overflow: TextOverflow.ellipsis,
-            maxLines: 2,
+            maxLines: 1,
             style: const TextStyle(fontSize: 14),
           ),
         );
@@ -865,6 +900,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     return DropdownButtonFormField<String>(
       value: _willingToWork,
+      isExpanded: true,
       decoration: InputDecoration(
         hintText: 'Are you willing to work as Police Mitra/Volunteer?',
         hintStyle: const TextStyle(color: Colors.grey),
@@ -906,13 +942,44 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Widget _buildPoliceStationDropdown() {
     // Ensure the current value is valid, reset if not
-    final validOptions = ['Select Police Station', 'Ambernath', 'Badalpur(E)', 'Badalpur(W)', 'Bazarpeth', 'Bhiwandi City', 'Bhoiwada', 'Central', 'Dombivli(Ramnagar)', 'HillLine', 'Kalwa', 'Kapurbawadi', 'Khadakpada', 'Kholsewadi', 'Kongaon', 'Kopari', 'Mahatma Phule Chowk', 'Manpada', 'Mumbra', 'Narpoli', 'Naupada', 'Nizampura', 'Rabodi', 'Shanti Nagar', 'Shil DyaGhar', 'Shivaji Nagar', 'Shrinagar', 'Thane Nagar', 'Tilak Nagar', 'Ulhasnagar', 'Vartak Nagar', 'Vishnu Nagar', 'Vitthalwadi', 'Wagle Estate'];
+    final validOptions = ['Select Police Station',"KALWA POLICE STATION",
+    "MUMBRA POLICE STATION",
+    "NAUPADA POLICE STATION",
+    "RABODI POLICE STATION",
+    "SHILDOIGHAR POLICE STATION",
+    "THANENAGAR POLICE STATION", "BHIWANDI POLICE STATION",
+    "BHOIWADA POLICE STATION",
+    "KONGAON POLICE STATION",
+    "NARPOLI POLICE STATION",
+    "NIZAMPURA POLICE STATION",
+    "SHANTINAGAR POLICE STATION", "BAZARPETH POLICE STATION",
+    "DOMBIWALI POLICE STATION",
+    "KHADAKPADA POLICE STATION",
+    "KOLSHEWADI POLICE STATION",
+    "MAHATMA PHULE CHOUK POLICE STATION",
+    "MANPADA POLICE STATION",
+    "TILAKNAGAR POLICE STATION",
+    "VISHNUNAGAR POLICE STATION","AMBARNATH POLICE STATION",
+    "BADALAPUR EAST POLICE STATION",
+    "BADALAPUR WEST POLICE STATION",
+    "CETRAL POLICE STATION",
+    "HILLLINE POLICE STATION",
+    "SHIVAJINAGAR POLICE STATION",
+    "ULHASNAGAR POLICE STATION",
+    "VITTHALWADI POLICE STATION",  "CHITALSAR POLICE STATION",
+    "KAPURBAWADI POLICE STATION",
+    "KASARWADAWALI POLICE STATION",
+    "KOPARI POLICE STATION",
+    "SHRINAGAR POLICE STATION",
+    "VARTAKNAGAR POLICE STATION",
+    "WAGALE ESTATE POLICE STATION"];
     if (!validOptions.contains(_policeStation)) {
       _policeStation = 'Select Police Station';
     }
 
     return DropdownButtonFormField<String>(
       value: _policeStation,
+      isExpanded: true,
       decoration: InputDecoration(
         hintText: 'Select Near Police Station',
         hintStyle: const TextStyle(color: Colors.grey),
@@ -946,6 +1013,143 @@ class _SignupScreenState extends State<SignupScreen> {
       validator: (value) {
         if (value == null || value == 'Select Police Station') {
           return 'Please select a police station';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildBloodGroupDropdown() {
+    // Ensure the current value is valid, reset if not
+    final validOptions = ['Select Blood Group', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+    if (!validOptions.contains(_bloodGroup)) {
+      _bloodGroup = 'Select Blood Group';
+    }
+
+    return DropdownButtonFormField<String>(
+      value: _bloodGroup,
+      isExpanded: true,
+      decoration: InputDecoration(
+        hintText: 'Select Blood Group',
+        hintStyle: const TextStyle(color: Colors.grey),
+        border: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.purple),
+        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      ),
+      items: validOptions.map((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(
+            value,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: const TextStyle(fontSize: 14),
+          ),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _bloodGroup = value!;
+        });
+      },
+      validator: (value) {
+        if (value == null || value == 'Select Blood Group') {
+          return 'Please select your blood group';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildDayDropdown() {
+    // Ensure the current value is valid, reset if not
+    final validOptions = ['Select Day', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    if (!validOptions.contains(_selectedDay)) {
+      _selectedDay = 'Select Day';
+    }
+
+    return DropdownButtonFormField<String>(
+      value: _selectedDay,
+      isExpanded: true,
+      decoration: InputDecoration(
+        hintText: 'Select Day',
+        hintStyle: const TextStyle(color: Colors.grey),
+        border: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.purple),
+        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      ),
+      items: validOptions.map((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(
+            value,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: const TextStyle(fontSize: 14),
+          ),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _selectedDay = value!;
+        });
+      },
+      validator: (value) {
+        if (value == null || value == 'Select Day') {
+          return 'Please select a day';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildTimeField() {
+    return TextFormField(
+      controller: _timeController,
+      readOnly: true,
+      onTap: () async {
+        TimeOfDay? pickedTime = await showTimePicker(
+          context: context,
+          initialTime: TimeOfDay.now(),
+        );
+        if (pickedTime != null) {
+          setState(() {
+            _timeController.text = pickedTime.format(context);
+          });
+        }
+      },
+      style: const TextStyle(fontSize: 16),
+      decoration: InputDecoration(
+        hintText: 'Select Time',
+        hintStyle: const TextStyle(color: Colors.grey),
+        border: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.purple),
+        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please select a time';
         }
         return null;
       },
