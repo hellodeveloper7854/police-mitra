@@ -15,12 +15,12 @@ class HelplineScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => context.go('/dashboard'),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.settings, color: Colors.black),
+        //     onPressed: () {},
+        //   ),
+        // ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -100,8 +100,9 @@ class HelplineScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     const Text(
                       'Cyber Security Helpline',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: Colors.black54,
                       ),
@@ -118,8 +119,9 @@ class HelplineScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     const Text(
                       'Common Helpline Numbers',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: Colors.black54,
                       ),
@@ -127,21 +129,21 @@ class HelplineScreen extends StatelessWidget {
                     const SizedBox(height: 24),
                     
                     // Thane Control Room Card
-                    _buildHelplineCard(
-                      icon: _buildHelpIcon(Colors.red),
-                      title: 'Thane Control Room',
-                      subtitle: 'Thane CP Control Room Helpline Numbers are listed here.',
-                      onTap: () => _showHelplineDialog(context, 'Thane Control', '022-12345678'),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Thane Control Helpline Numbers',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black54,
-                      ),
-                    ),
+                    // _buildHelplineCard(
+                    //   icon: _buildHelpIcon(Colors.red),
+                    //   title: 'Thane Control Room',
+                    //   subtitle: 'Thane CP Control Room Helpline Numbers are listed here.',
+                    //   onTap: () => _showHelplineDialog(context, 'Thane Control', '022-12345678'),
+                    // ),
+                    // const SizedBox(height: 8),
+                    // const Text(
+                    //   'Thane Control Helpline Numbers',
+                    //   style: TextStyle(
+                    //     fontSize: 16,
+                    //     fontWeight: FontWeight.w600,
+                    //     color: Colors.black54,
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
@@ -216,37 +218,32 @@ class HelplineScreen extends StatelessWidget {
 
   Widget _buildCyberSecurityIcon() {
     return Container(
-      width: 50,
-      height: 50,
+      width: 60,
+      height: 60,
       decoration: BoxDecoration(
         color: const Color(0xFF1E40AF),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Icon(
-        Icons.security,
-        color: Colors.white,
-        size: 28,
+      child: Image.asset(
+        'assets/images/Nhelp.png',
+        width: 55,
+        height: 55,
       ),
     );
   }
 
   Widget _buildHelpIcon(Color color) {
     return Container(
-      width: 50,
-      height: 50,
+      width: 60,
+      height: 60,
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Center(
-        child: Text(
-          'HELP',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+      child: Image.asset(
+        'assets/images/Chelp.png',
+        width: 55,
+        height: 55,
       ),
     );
   }

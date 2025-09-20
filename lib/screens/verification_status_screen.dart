@@ -121,8 +121,53 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontSize: 18),
                       ),
+                      const SizedBox(height: 24),
+                      _buildCard('Other Helpline', Icons.headset_mic, Colors.grey[600]!, () {
+                        context.go('/helpline');
+                      }),
                     ],
                   ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCard(String title, IconData icon, Color iconColor, VoidCallback onTap) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: Image.asset('assets/images/helpline.png', width: 90, height: 90),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ],
           ),
         ),
       ),
