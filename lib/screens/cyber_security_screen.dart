@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 
 class CyberSecurityScreen extends StatelessWidget {
   const CyberSecurityScreen({super.key});
 
   void _launchURL(String url) async {
     final Uri uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+    print('Trying to launch URL: $url');
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      print('URL launched successfully');
+    } catch (e) {
+      print('Failed to launch URL: $e');
     }
   }
 
@@ -28,14 +33,14 @@ class CyberSecurityScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.go('/dashboard'),
+          onPressed: () => context.go('/helpline'),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.settings, color: Colors.black),
+        //     onPressed: () {},
+        //   ),
+        // ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -107,6 +112,10 @@ class CyberSecurityScreen extends StatelessWidget {
                     // For Cheating Dial Card
                     _buildInfoCard(
                       title: 'For Cheating Dial',
+                      onShare: () {
+                        print('Sharing For Cheating Dial');
+                        Share.share('For Cheating Dial: 1930\nVisit: https://cybercrime.gov.in', subject: 'Cyber Security Helpline');
+                      },
                       content: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -177,6 +186,10 @@ class CyberSecurityScreen extends StatelessWidget {
                     // Facebook Account Hacked Card
                     _buildInfoCard(
                       title: 'How to report Hacked Facebook Account ?',
+                      onShare: () {
+                        print('Sharing Facebook Hack Report');
+                        Share.share('How to report Hacked Facebook Account:\n1. Report on https://www.facebook.com/help/contact/278770247037228 and get ticket number.\n2. If no response after 2 days, report on https://goc.gov.in [IAC - MHA, MeitY etc part of it]', subject: 'Facebook Account Hack Report');
+                      },
                       content: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -185,9 +198,9 @@ class CyberSecurityScreen extends StatelessWidget {
                             style: TextStyle(fontSize: 14),
                           ),
                           GestureDetector(
-                            onTap: () => _launchURL('https://www.facebook.com/help/contact/1787072644713778'),
+                            onTap: () => _launchURL('https://www.facebook.com/help/contact/278770247037228'),
                             child: const Text(
-                              'https://www.facebook.com/help/contact/1787072644713778',
+                              'https://www.facebook.com/help/contact/278770247037228',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.blue,
@@ -227,6 +240,10 @@ class CyberSecurityScreen extends StatelessWidget {
                     // WhatsApp Account Hacked Card
                     _buildInfoCard(
                       title: 'How to report Hacked / Impersonating WhatsApp Account ?',
+                      onShare: () {
+                        print('Sharing WhatsApp Hack Report');
+                        Share.share('How to report Hacked / Impersonating WhatsApp Account:\n1. Report on https://www.whatsapp.com/contact/forms/1534459096974129?lang=en_US\n2. If no response after 2 days, report on https://goc.gov.in [IAC - MHA, MeitY etc part of it]', subject: 'WhatsApp Account Hack Report');
+                      },
                       content: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -279,11 +296,10 @@ class CyberSecurityScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
-  Widget _buildInfoCard({required String title, required Widget content}) {
+  Widget _buildInfoCard({required String title, required Widget content, VoidCallback? onShare}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -307,10 +323,13 @@ class CyberSecurityScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              const Icon(
-                Icons.share,
-                size: 20,
-                color: Colors.black54,
+              IconButton(
+                onPressed: onShare,
+                icon: const Icon(
+                  Icons.share,
+                  size: 20,
+                  color: Colors.black54,
+                ),
               ),
             ],
           ),
@@ -318,49 +337,6 @@ class CyberSecurityScreen extends StatelessWidget {
           content,
         ],
       ),
-    );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      height: 80,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildNavItem(Icons.home_outlined, 'Home', false),
-          _buildNavItem(Icons.wifi_outlined, 'Wi-Fi', false),
-          _buildNavItem(Icons.people_outline, 'Community', false),
-          _buildNavItem(Icons.phone_outlined, 'Contact', true),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, bool isSelected) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          icon,
-          color: isSelected ? const Color(0xFF6B46C1) : Colors.black54,
-          size: 24,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: isSelected ? const Color(0xFF6B46C1) : Colors.black54,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
-      ],
     );
   }
 }

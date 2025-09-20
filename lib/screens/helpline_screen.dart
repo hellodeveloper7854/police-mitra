@@ -13,7 +13,7 @@ class HelplineScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.go('/dashboard'),
+          onPressed: () => context.go('/status'),
         ),
         // actions: [
         //   IconButton(
@@ -114,7 +114,7 @@ class HelplineScreen extends StatelessWidget {
                       icon: _buildHelpIcon(Colors.pink),
                       title: 'National Helpline',
                       subtitle: 'Common Helpline Numbers of country are listed here.',
-                      onTap: () => context.go('/national-helpline'),
+                      onTap: () => context.go('/other-helplines'),
                     ),
                     const SizedBox(height: 8),
                     const Text(
@@ -151,7 +151,7 @@ class HelplineScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+      // bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
