@@ -33,7 +33,7 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _accepted2 = false;
   bool _accepted3 = false;
   bool _accepted4 = false;
-
+  bool _accepted5 = false;
   @override
   void initState() {
     super.initState();
@@ -656,8 +656,8 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                       CheckboxListTile(
                       title: const Text('Are you willing to work as Police Mitra/Volunteer?.'),
-                      value: _accepted4,
-                      onChanged: (value) => setState(() => _accepted4 = value ?? false),
+                      value: _accepted5,
+                      onChanged: (value) => setState(() => _accepted5 = value ?? false),
                     ),
                   ],
                 ),
