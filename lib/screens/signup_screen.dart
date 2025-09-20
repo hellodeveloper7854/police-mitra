@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
+import '../utils/crypto_helper.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -535,11 +536,11 @@ class _SignupScreenState extends State<SignupScreen> {
                                 'participation_area': _mapParticipationToEnum(_participation),
                                 'occupation': _occupation,
                                 'police_station': _policeStation,
-                                'mobile_number': _mobileController.text,
-                                'alternate_mobile_number': _alternateMobileController.text.isNotEmpty ? _alternateMobileController.text : null,
+                                'mobile_number': CryptoHelper.encryptText(_mobileController.text),
+                                'alternate_mobile_number': _alternateMobileController.text.isNotEmpty ? CryptoHelper.encryptText(_alternateMobileController.text) : null,
                                 'date_of_birth': _toIsoDate(_dobController.text),
                                 'college_details': _occupation == 'Student' ? '${_collegeNameController.text} - ${_academicDetailsController.text}' : null,
-                                'identity_numbers': 'PAN:${_panCardController.text},AADHAR:${_aadharCardController.text}',
+                                'identity_numbers': 'PAN:${_panCardController.text},AADHAR:${CryptoHelper.encryptText(_aadharCardController.text)}',
                                 'gender': _gender,
                                 'qualification': _qualificationController.text,
                                 'ngo_affiliation': _ngoController.text.isNotEmpty ? _ngoController.text : null,
@@ -668,7 +669,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: (_accepted1 && _accepted2 && _accepted3 && _accepted4) ? () => Navigator.of(context).pop(true) : null,
+                  onPressed: (_accepted1 && _accepted2 && _accepted3 && _accepted4 && _accepted5) ? () => Navigator.of(context).pop(true) : null,
                   child: const Text('Accept'),
                 ),
               ],

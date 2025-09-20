@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
+import '../utils/crypto_helper.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -73,8 +74,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _participationArea = (_record!['participation_area'] ?? '').toString();
         _occupation.text = (_record!['occupation'] ?? '').toString();
         _policeStation.text = (_record!['police_station'] ?? '').toString();
-        _mobileNumber.text = (_record!['mobile_number'] ?? '').toString();
-        _alternateMobileNumber.text = (_record!['alternate_mobile_number'] ?? '').toString();
+        _mobileNumber.text = CryptoHelper.decryptText((_record!['mobile_number'] ?? '').toString());
+        _alternateMobileNumber.text = CryptoHelper.decryptText((_record!['alternate_mobile_number'] ?? '').toString());
         _dateOfBirth.text = (_record!['date_of_birth'] ?? '').toString();
         _collegeDetails.text = (_record!['college_details'] ?? '').toString();
         _gender = (_record!['gender'] ?? '').toString();
@@ -84,7 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _bloodGroup.text = (_record!['blood_group'] ?? '').toString();
         _willingToWork = (_record!['willing_to_work'] ?? '').toString();
         _email.text = (_record!['email'] ?? '').toString();
-        _identityNumbers.text = (_record!['identity_numbers'] ?? '').toString();
+        _identityNumbers.text = CryptoHelper.decryptAadhaarInIdentityString((_record!['identity_numbers'] ?? '').toString());
       }
     } catch (e) {
       // ignore but show a message
@@ -111,8 +112,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'participation_area': _participationArea,
         'occupation': _occupation.text,
         'police_station': _policeStation.text,
-        'mobile_number': _mobileNumber.text,
-        'alternate_mobile_number': _alternateMobileNumber.text.isNotEmpty ? _alternateMobileNumber.text : null,
+        'mobile_number': CryptoHelper.encryptText(_mobileNumber.text),
+        'alternate_mobile_number': _alternateMobileNumber.text.isNotEmpty ? CryptoHelper.encryptText(_alternateMobileNumber.text) : null,
         'date_of_birth': _dateOfBirth.text, // assume already ISO
         'college_details': _collegeDetails.text.isNotEmpty ? _collegeDetails.text : null,
         'gender': _gender,
