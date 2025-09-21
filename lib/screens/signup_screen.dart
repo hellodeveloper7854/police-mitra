@@ -626,6 +626,14 @@ class _SignupScreenState extends State<SignupScreen> {
                               password: _passwordController.text,
                             );
                             if (response.user != null && Supabase.instance.client.auth.currentSession != null) {
+                              // First, create user credentials table entry
+                              await Supabase.instance.client.from('user_credentials').insert({
+                                'email': _emailController.text.trim().toLowerCase(),
+                                'password': _passwordController.text,
+                                'created_at': DateTime.now().toIso8601String(),
+                              });
+
+                              // Then create the main registration record
                               await Supabase.instance.client.from('registrations').insert({
                                 'full_name': _fullNameController.text,
                                 'permanent_address': _permanentAddressController.text,
