@@ -143,6 +143,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  String _mapParticipationToEnum(String label) {
+    switch (label) {
+      case 'Traffic Management':
+        return 'traffic_management';
+      case 'School/College Awareness Programs':
+        return 'school_awareness';
+      case 'Senior Citizen Visits':
+        return 'senior_citizens';
+      case 'Social Media Promotion':
+        return 'social_media_volunteer';
+      case 'Festival Crowd Management':
+        return 'crowd_management';
+      default:
+        return 'traffic_management';
+    }
+  }
+
+  String _mapEnumToParticipation(String enumValue) {
+    switch (enumValue) {
+      case 'traffic_management':
+        return 'Traffic Management';
+      case 'school_awareness':
+        return 'School/College Awareness Programs';
+      case 'senior_citizens':
+        return 'Senior Citizen Visits';
+      case 'social_media_volunteer':
+        return 'Social Media Promotion';
+      case 'crowd_management':
+        return 'Festival Crowd Management';
+      default:
+        return 'Traffic Management';
+    }
+  }
+
   @override
   void dispose() {
     _fullName.dispose();
@@ -201,13 +235,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _editField('Full Name', _fullName),
                   _editField('Permanent Address', _permanentAddress, maxLines: 2),
                   _editField('Current Address', _currentAddress, maxLines: 2),
-                  _dropdownField('Participation Area', _participationArea, [
-                    'traffic_management',
-                    'school_awareness',
-                    'senior_citizens',
-                    'social_media_volunteer',
-                    'crowd_management'
-                  ], (v) => setState(() => _participationArea = v)),
+                  _dropdownField('Participation Area', _mapEnumToParticipation(_participationArea), [
+                    'Traffic Management',
+                    'School/College Awareness Programs',
+                    'Senior Citizen Visits',
+                    'Social Media Promotion',
+                    'Festival Crowd Management'
+                  ], (v) => setState(() => _participationArea = _mapParticipationToEnum(v))),
                   _editField('Occupation', _occupation),
                   _editField('Police Station', _policeStation),
                   _editField('Mobile Number', _mobileNumber, keyboardType: TextInputType.phone),
