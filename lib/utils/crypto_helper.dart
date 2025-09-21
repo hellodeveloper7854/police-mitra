@@ -24,14 +24,16 @@ class CryptoHelper {
     }
   }
 
-  // Tries to find AADHAR:<value> in a free-form string and decrypt just the value
+  // Tries to find AADHAR:<value> in a free-form string and decrypt just the value, excluding PAN
   static String decryptAadhaarInIdentityString(String text) {
     if (text.isEmpty) return text;
     final reg = RegExp(r'AADHAR:([^,\s]+)');
-    return text.replaceAllMapped(reg, (m) {
-      final encVal = m.group(1)?.trim() ?? '';
+    final match = reg.firstMatch(text);
+    if (match != null) {
+      final encVal = match.group(1)?.trim() ?? '';
       final dec = decryptText(encVal);
       return 'AADHAR:$dec';
-    });
+    }
+    return text;
   }
 }
