@@ -339,19 +339,18 @@ class _SignupScreenState extends State<SignupScreen> {
                     },
                   ),
                   const SizedBox(height: 15),
-                  // College Name and Academic Details Fields (conditional)
+                  // College Name Field (available for all users)
+                  _buildTextField(
+                    controller: _collegeNameController,
+                    hintText: 'Enter Name of College',
+                    validator: (value) {
+                      // Optional field for all users - no validation required
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 15),
+                  // Academic Details Field (conditional - only for students)
                   if (_occupation == 'Student') ...[
-                    _buildTextField(
-                      controller: _collegeNameController,
-                      hintText: 'Enter Name of College *',
-                      validator: (value) {
-                        if (_occupation == 'Student' && (value == null || value.isEmpty)) {
-                          return 'Please enter your college name';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 15),
                     _buildTextField(
                       controller: _academicDetailsController,
                       hintText: 'Enter Academic Details *',
@@ -637,7 +636,11 @@ class _SignupScreenState extends State<SignupScreen> {
                                 'mobile_number': CryptoHelper.encryptText(_mobileController.text),
                                 'alternate_mobile_number': _alternateMobileController.text.isNotEmpty ? CryptoHelper.encryptText(_alternateMobileController.text) : null,
                                 'date_of_birth': _toIsoDate(_dobController.text),
-                                'college_details': _occupation == 'Student' ? '${_collegeNameController.text} - ${_academicDetailsController.text}' : null,
+                                'college_details': _collegeNameController.text.isNotEmpty
+                                  ? _occupation == 'Student' && _academicDetailsController.text.isNotEmpty
+                                      ? '${_collegeNameController.text} - ${_academicDetailsController.text}'
+                                      : _collegeNameController.text
+                                  : null,
                                 'identity_numbers': 'PAN:${_panCardController.text},AADHAR:${CryptoHelper.encryptText(_aadharCardController.text)}',
                                 'gender': _gender,
                                 'qualification': _qualificationController.text,
