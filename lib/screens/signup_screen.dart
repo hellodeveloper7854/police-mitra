@@ -60,7 +60,43 @@ class _SignupScreenState extends State<SignupScreen> {
     if (!['Select Day', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].contains(_selectedDay)) {
       _selectedDay = 'Select Day';
     }
+    _passwordController.addListener(() {
+      _checkPasswordStrength(_passwordController.text);
+    });
   }
+
+  void _checkPasswordStrength(String password) {
+    setState(() {
+      _hasMinLength = password.length >= 8;
+      _hasUppercase = RegExp(r'[A-Z]').hasMatch(password);
+      _hasLowercase = RegExp(r'[a-z]').hasMatch(password);
+      _hasSpecialChar = RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password);
+    });
+  }
+
+  Widget _buildStrengthIndicator(String text, bool isSatisfied) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4.0),
+      child: Row(
+        children: [
+          Icon(
+            isSatisfied ? Icons.check_circle : Icons.radio_button_unchecked,
+            color: isSatisfied ? Colors.green : Colors.grey,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 12,
+              color: isSatisfied ? Colors.green : Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   final _qualificationController = TextEditingController();
   final _ngoController = TextEditingController();
   final _timeController = TextEditingController();
@@ -69,6 +105,10 @@ class _SignupScreenState extends State<SignupScreen> {
   File? _selectedImage;
   String _willingToWork = 'Yes';
   bool _isLoading = false;
+  bool _hasMinLength = false;
+  bool _hasUppercase = false;
+  bool _hasLowercase = false;
+  bool _hasSpecialChar = false;
 
   @override
   void dispose() {
@@ -499,7 +539,17 @@ class _SignupScreenState extends State<SignupScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildStrengthIndicator('Minimum 8 characters', _hasMinLength),
+                      _buildStrengthIndicator('At least one uppercase letter', _hasUppercase),
+                      _buildStrengthIndicator('At least one lowercase letter', _hasLowercase),
+                      _buildStrengthIndicator('At least one special character', _hasSpecialChar),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
                   // Confirm Password Field
                   _buildTextField(
                     controller: _confirmPasswordController,
@@ -518,7 +568,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : () async {
+                      onPressed: _isLoading || !(_hasMinLength && _hasUppercase && _hasLowercase && _hasSpecialChar) ? null : () async {
                         bool accepted = await _showAcceptanceDialog();
                         if (!accepted) return;
                         if (_formKey.currentState!.validate()) {
