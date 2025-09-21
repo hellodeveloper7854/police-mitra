@@ -156,8 +156,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             );
 
                             if (res.session != null) {
+                              print('DEBUG: Login successful - navigating to /status');
                               if (mounted) context.go('/status');
                             } else {
+                              print('DEBUG: Login failed - no session returned');
                               if (mounted) {
                                 showDialog(
                                   context: context,

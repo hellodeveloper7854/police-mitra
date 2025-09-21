@@ -177,7 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.purple),
-            onPressed: () => context.go('/status'),
+            onPressed: () => context.push('/status'),
             tooltip: 'Back',
           ),
           IconButton(

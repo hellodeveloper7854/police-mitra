@@ -92,7 +92,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
           IconButton(
             icon: const Icon(Icons.person_outline, color: Colors.purple),
             tooltip: 'My Profile',
-            onPressed: () => context.go('/profile'),
+            onPressed: () => context.push('/profile'),
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.purple),
@@ -124,7 +124,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
                       const SizedBox(height: 24),
                       if (_status == 'verified' || _status == 'approve' || _status == 'approved') ...[
                         _buildCard('Other Helpline', Icons.headset_mic, Colors.grey[600]!, () {
-                          context.go('/helpline');
+                          context.push('/helpline');
                         }),
                       ],
                     ],

@@ -13,7 +13,7 @@ class HelplineScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.go('/status'),
+          onPressed: () => context.push('/status'),
         ),
         // actions: [
         //   IconButton(
@@ -95,7 +95,7 @@ class HelplineScreen extends StatelessWidget {
                       icon: _buildCyberSecurityIcon(),
                       title: 'Cyber Security Helpline & Links',
                       subtitle: 'Tells how to report the Cyber crime',
-                      onTap: () => context.go('/cyber-security'),
+                      onTap: () => context.push('/cyber-security'),
                     ),
                     const SizedBox(height: 8),
                     const Text(
@@ -114,7 +114,7 @@ class HelplineScreen extends StatelessWidget {
                       icon: _buildHelpIcon(Colors.pink),
                       title: 'National Helpline',
                       subtitle: 'Common Helpline Numbers of country are listed here.',
-                      onTap: () => context.go('/other-helplines'),
+                      onTap: () => context.push('/other-helplines'),
                     ),
                     const SizedBox(height: 8),
                     const Text(

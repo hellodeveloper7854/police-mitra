@@ -23,7 +23,7 @@ class OtherHelplinesScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.go('/helpline'),
+          onPressed: () => context.push('/helpline'),
         ),
         // actions: [
         //   IconButton(

@@ -13,7 +13,7 @@ class AssignedServicesScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.go('/dashboard'),
+          onPressed: () => context.push('/dashboard'),
         ),
         actions: [
           IconButton(

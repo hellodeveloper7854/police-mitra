@@ -20,6 +20,15 @@ void main() async {
     url: 'https://ifzbizgupmttuwlajwtb.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmemJpemd1cG10dHV3bGFqd3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNjIwNzQsImV4cCI6MjA3MzkzODA3NH0.BYauXuoJvTaKHMXRC3Al5TtNIoPPVMWYmNgaBr6nRg4',
   );
+
+  // DEBUG: Check for existing session
+  final session = Supabase.instance.client.auth.currentSession;
+  print('DEBUG: App startup - Current session: ${session != null ? 'EXISTS' : 'NULL'}');
+  if (session != null) {
+    print('DEBUG: Session user: ${session.user?.email}');
+    print('DEBUG: Session expires: ${session.expiresAt}');
+  }
+
   runApp(const MyApp());
 }
 
@@ -34,6 +43,16 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/',
       builder: (BuildContext context, GoRouterState state) {
+        // Check for existing session
+        final session = Supabase.instance.client.auth.currentSession;
+        if (session != null && !session.isExpired) {
+          print('DEBUG: Existing session found - redirecting to /status');
+          // Use a post-frame callback to avoid navigation during build
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) context.go('/status');
+          });
+          return const LoginScreen(); // Temporary while redirecting
+        }
         return const LoginScreen();
       },
     ),

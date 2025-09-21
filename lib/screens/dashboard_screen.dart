@@ -44,21 +44,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _onItemTapped(int index) {
+    print('DEBUG: Bottom nav tapped - index: $index');
     setState(() {
       _selectedIndex = index;
     });
     switch (index) {
       case 0:
         // Home - already on dashboard
+        print('DEBUG: Staying on dashboard (home)');
         break;
       case 1:
-        context.go('/contact-police');
+        print('DEBUG: Navigating to /contact-police using context.push()');
+        context.push('/contact-police');
         break;
       case 2:
-        context.go('/community');
+        print('DEBUG: Navigating to /community using context.push()');
+        context.push('/community');
         break;
       case 3:
-        context.go('/assigned-services');
+        print('DEBUG: Navigating to /assigned-services using context.push()');
+        context.push('/assigned-services');
         break;
     }
   }
@@ -213,16 +218,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 childAspectRatio: 1.1,
                 children: [
                   _buildCard('Assigned\nServices', Icons.location_on, Colors.red, () {
-                    context.go('/assigned-services');
+                    print('DEBUG: Card navigation - going to /assigned-services');
+                    context.push('/assigned-services');
                   }),
                   _buildCard('Contact\nPolice Station', Icons.account_balance, Colors.blue, () {
-                    context.go('/contact-police');
+                    print('DEBUG: Card navigation - going to /contact-police');
+                    context.push('/contact-police');
                   }),
                   _buildCard('Other Helpline', Icons.headset_mic, Colors.grey[600]!, () {
-                    context.go('/helpline');
+                    print('DEBUG: Card navigation - going to /helpline');
+                    context.push('/helpline');
                   }),
                   _buildCard('Community', Icons.groups, Colors.orange, () {
-                    context.go('/community');
+                    print('DEBUG: Card navigation - going to /community');
+                    context.push('/community');
                   }),
                 ],
               ),

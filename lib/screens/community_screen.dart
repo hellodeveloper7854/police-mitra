@@ -48,7 +48,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
                       children: [
                         IconButton(
                           icon: const Icon(Icons.arrow_back, color: Colors.black),
-                          onPressed: () => context.go('/dashboard'),
+                          onPressed: () => context.push('/dashboard'),
                         ),
                         Expanded(
                           child: Container(
