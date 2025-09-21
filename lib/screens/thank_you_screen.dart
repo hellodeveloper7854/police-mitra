@@ -54,10 +54,10 @@ class ThankYouScreen extends StatelessWidget {
                 style: TextStyle(fontSize: 16, color: Colors.black87),
               ),
               const Spacer(),
-              const SizedBox(height: 24),
-              _buildCard('Other Helpline', Icons.headset_mic, Colors.grey[600]!, () {
-                context.go('/helpline');
-              }),
+              // const SizedBox(height: 24),
+              // _buildCard('Other Helpline', Icons.headset_mic, Colors.grey[600]!, () {
+              //   context.go('/helpline');
+              // }),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,

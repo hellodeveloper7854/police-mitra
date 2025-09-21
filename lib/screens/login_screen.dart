@@ -150,22 +150,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             final email = _emailController.text.trim();
                             final password = _passwordController.text;
 
-                            // Check if email exists in registrations
-                            final existingUser = await Supabase.instance.client
-                                .from('registrations')
-                                .select('email')
-                                .eq('email', email.toLowerCase())
-                                .maybeSingle();
-
-                            if (existingUser == null) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Not enrolled yet. Please enroll and then login.')),
-                                );
-                              }
-                              return;
-                            }
-
                             final res = await Supabase.instance.client.auth.signInWithPassword(
                               email: email,
                               password: password,
@@ -175,16 +159,42 @@ class _LoginScreenState extends State<LoginScreen> {
                               if (mounted) context.go('/status');
                             } else {
                               if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('You entered wrong password. Please use the correct password.')),
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Invalid Password'),
+                                    content: const Text('You entered an invalid password. Please try again.'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.of(context).pop(),
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
+                                  ),
                                 );
                               }
                             }
                           } catch (e) {
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Sign in error: $e')),
-                              );
+                              if (e.toString().contains('Invalid login credentials')) {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Invalid Password'),
+                                    content: const Text('You entered an invalid password. Please try again.'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.of(context).pop(),
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Sign in error: $e')),
+                                );
+                              }
                             }
                           } finally {
                             if (mounted) setState(() => _isLoading = false);

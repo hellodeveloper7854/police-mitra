@@ -122,9 +122,11 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
                         style: const TextStyle(fontSize: 18),
                       ),
                       const SizedBox(height: 24),
-                      _buildCard('Other Helpline', Icons.headset_mic, Colors.grey[600]!, () {
-                        context.go('/helpline');
-                      }),
+                      if (_status == 'verified' || _status == 'approve' || _status == 'approved') ...[
+                        _buildCard('Other Helpline', Icons.headset_mic, Colors.grey[600]!, () {
+                          context.go('/helpline');
+                        }),
+                      ],
                     ],
                   ),
           ),
