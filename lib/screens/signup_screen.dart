@@ -17,8 +17,8 @@ class _SignupScreenState extends State<SignupScreen> {
   final _permanentAddressController = TextEditingController();
   final _currentAddressController = TextEditingController();
   String _participation = 'Traffic Management';
-  String _policeStation = 'Select Police Station';
-  String _occupation = 'Select Occupation';
+  String _policeStation = 'KALWA POLICE STATION';
+  String _occupation = 'Service/Job';
   final _mobileController = TextEditingController();
   final _alternateMobileController = TextEditingController();
   final _dobController = TextEditingController();
@@ -51,7 +51,7 @@ class _SignupScreenState extends State<SignupScreen> {
     if (!['Male', 'Female', 'Prefer not to say'].contains(_gender)) {
       _gender = 'Male';
     }
-    if (!['Select Police Station', 'Ambernath', 'Badalpur(E)', 'Badalpur(W)', 'Bazarpeth', 'Bhiwandi City', 'Bhoiwada', 'Central', 'Dombivli(Ramnagar)', 'HillLine', 'Kalwa', 'Kapurbawadi', 'Khadakpada', 'Kholsewadi', 'Kongaon', 'Kopari', 'Mahatma Phule Chowk', 'Manpada', 'Mumbra', 'Narpoli', 'Naupada', 'Nizampura', 'Rabodi', 'Shanti Nagar', 'Shil DyaGhar', 'Shivaji Nagar', 'Shrinagar', 'Thane Nagar', 'Tilak Nagar', 'Ulhasnagar', 'Vartak Nagar', 'Vishnu Nagar', 'Vitthalwadi', 'Wagle Estate'].contains(_policeStation)) {
+    if (!['Select Police Station', "KALWA POLICE STATION", "MUMBRA POLICE STATION", "NAUPADA POLICE STATION", "RABODI POLICE STATION", "SHILDOIGHAR POLICE STATION", "THANENAGAR POLICE STATION", "BHIWANDI POLICE STATION", "BHOIWADA POLICE STATION", "KONGAON POLICE STATION", "NARPOLI POLICE STATION", "NIZAMPURA POLICE STATION", "SHANTINAGAR POLICE STATION", "BAZARPETH POLICE STATION", "DOMBIWALI POLICE STATION", "KHADAKPADA POLICE STATION", "KOLSHEWADI POLICE STATION", "MAHATMA PHULE CHOUK POLICE STATION", "MANPADA POLICE STATION", "TILAKNAGAR POLICE STATION", "VISHNUNAGAR POLICE STATION", "AMBARNATH POLICE STATION", "BADALAPUR EAST POLICE STATION", "BADALAPUR WEST POLICE STATION", "CETRAL POLICE STATION", "HILLLINE POLICE STATION", "SHIVAJINAGAR POLICE STATION", "ULHASNAGAR POLICE STATION", "VITTHALWADI POLICE STATION", "CHITALSAR POLICE STATION", "KAPURBAWADI POLICE STATION", "KASARWADAWALI POLICE STATION", "KOPARI POLICE STATION", "SHRINAGAR POLICE STATION", "VARTAKNAGAR POLICE STATION", "WAGALE ESTATE POLICE STATION"].contains(_policeStation)) {
       _policeStation = 'Select Police Station';
     }
     if (!['Select Blood Group', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].contains(_bloodGroup)) {
@@ -100,8 +100,8 @@ class _SignupScreenState extends State<SignupScreen> {
   final _qualificationController = TextEditingController();
   final _ngoController = TextEditingController();
   final _timeController = TextEditingController();
-  String _bloodGroup = 'Select Blood Group';
-  String _selectedDay = 'Select Day';
+  String _bloodGroup = 'A+';
+  String _selectedDay = 'Monday';
   File? _selectedImage;
   String _willingToWork = 'Yes';
   bool _isLoading = false;
@@ -200,7 +200,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   // Full Name Field
                   _buildTextField(
                     controller: _fullNameController,
-                    hintText: 'Enter Full Name',
+                    hintText: 'Enter Full Name *',
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your full name';
@@ -212,7 +212,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   // Permanent Address Field
                   _buildTextField(
                     controller: _permanentAddressController,
-                    hintText: 'Enter Permanent Address',
+                    hintText: 'Enter Permanent Address *',
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your permanent address';
@@ -224,7 +224,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   // Current Address Field
                   _buildTextField(
                     controller: _currentAddressController,
-                    hintText: 'Enter Current Address',
+                    hintText: 'Enter Current Address *',
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your current address';
@@ -234,12 +234,27 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 15),
                   // Participation Field
+                  const Text(
+                    'Participation Area *',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 5),
                   _buildParticipationDropdown(),
                   const SizedBox(height: 15),
                   // Occupation Field
+                  const Text(
+                    'Occupation *',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 5),
                   _buildOccupationDropdown(),
                   const SizedBox(height: 15),
                   // Police Station Field
+                  const Text(
+                    'Police Station *',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 5),
                   _buildPoliceStationDropdown(),
                   const SizedBox(height: 15),
                   // Mobile and Alternate Mobile Row
@@ -251,7 +266,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           children: [
                             _buildTextField(
                               controller: _mobileController,
-                              hintText: 'Mobile Number',
+                              hintText: 'Mobile Number *',
                               keyboardType: TextInputType.phone,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -302,7 +317,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   // DOB Field
                   _buildTextField(
                     controller: _dobController,
-                    hintText: 'Date Of Birth (DD/MM/YYYY)',
+                    hintText: 'Date Of Birth (DD/MM/YYYY) *',
                     readOnly: true,
                     onTap: () async {
                       DateTime? pickedDate = await showDatePicker(
@@ -328,7 +343,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   if (_occupation == 'Student') ...[
                     _buildTextField(
                       controller: _collegeNameController,
-                      hintText: 'Enter Name of College',
+                      hintText: 'Enter Name of College *',
                       validator: (value) {
                         if (_occupation == 'Student' && (value == null || value.isEmpty)) {
                           return 'Please enter your college name';
@@ -339,7 +354,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     const SizedBox(height: 15),
                     _buildTextField(
                       controller: _academicDetailsController,
-                      hintText: 'Enter Academic Details',
+                      hintText: 'Enter Academic Details *',
                       validator: (value) {
                         if (_occupation == 'Student' && (value == null || value.isEmpty)) {
                           return 'Please enter your academic details';
@@ -369,7 +384,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             const SizedBox(height: 15),
                             _buildTextField(
                               controller: _aadharCardController,
-                              hintText: 'Aadhar Card Number',
+                              hintText: 'Aadhar Card Number *',
                               keyboardType: TextInputType.number,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -419,7 +434,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   // Qualification Field
                   _buildTextField(
                     controller: _qualificationController,
-                    hintText: 'Enter Qualification',
+                    hintText: 'Enter Qualification *',
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your qualification';
@@ -450,6 +465,11 @@ class _SignupScreenState extends State<SignupScreen> {
                         // Stack vertically on small screens
                         return Column(
                           children: [
+                            const Text(
+                              'Available Day *',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                            const SizedBox(height: 5),
                             _buildDayDropdown(),
                             const SizedBox(height: 15),
                             _buildTimeField(),
@@ -460,7 +480,17 @@ class _SignupScreenState extends State<SignupScreen> {
                         return Row(
                           children: [
                             Expanded(
-                              child: _buildDayDropdown(),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Available Day *',
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  _buildDayDropdown(),
+                                ],
+                              ),
                             ),
                             const SizedBox(width: 15),
                             Expanded(
@@ -473,6 +503,11 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 15),
                   // Blood Group Field
+                  const Text(
+                    'Blood Group *',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 5),
                   _buildBloodGroupDropdown(),
                   const SizedBox(height: 15),
                   // Willing to Work Dropdown
@@ -487,7 +522,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           children: [
                             _buildTextField(
                               controller: _emailController,
-                              hintText: 'Enter Email',
+                              hintText: 'Enter Email *',
                               keyboardType: TextInputType.emailAddress,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -497,6 +532,11 @@ class _SignupScreenState extends State<SignupScreen> {
                               },
                             ),
                             const SizedBox(height: 15),
+                            const Text(
+                              'Gender *',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                            const SizedBox(height: 5),
                             _buildDropdownField(),
                           ],
                         );
@@ -530,7 +570,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   // Password Field
                   _buildTextField(
                     controller: _passwordController,
-                    hintText: 'Enter Password',
+                    hintText: 'Enter Password *',
                     obscureText: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -553,7 +593,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   // Confirm Password Field
                   _buildTextField(
                     controller: _confirmPasswordController,
-                    hintText: 'Confirm Password',
+                    hintText: 'Confirm Password *',
                     obscureText: true,
                     validator: (value) {
                       if (value != _passwordController.text) {
@@ -568,10 +608,18 @@ class _SignupScreenState extends State<SignupScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: _isLoading || !(_hasMinLength && _hasUppercase && _hasLowercase && _hasSpecialChar) ? null : () async {
+                      onPressed: _isLoading ? null : () async {
                         bool accepted = await _showAcceptanceDialog();
                         if (!accepted) return;
                         if (_formKey.currentState!.validate()) {
+                          if (!(_hasMinLength && _hasUppercase && _hasLowercase && _hasSpecialChar)) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Password should be strong: minimum 8 characters, with uppercase, lowercase, and special character.')),
+                              );
+                            }
+                            return;
+                          }
                           setState(() => _isLoading = true);
                           try {
                             final response = await Supabase.instance.client.auth.signUp(
@@ -1185,7 +1233,7 @@ class _SignupScreenState extends State<SignupScreen> {
       },
       style: const TextStyle(fontSize: 16),
       decoration: InputDecoration(
-        hintText: 'Select Time',
+        hintText: 'Select Time *',
         hintStyle: const TextStyle(color: Colors.grey),
         border: UnderlineInputBorder(
           borderSide: BorderSide(color: Colors.grey.shade300),

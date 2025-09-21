@@ -145,36 +145,51 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: _isLoading
                         ? null
                         : () async {
-                            setState(() => _isLoading = true);
-                            try {
-                              final email = _emailController.text.trim();
-                              final password = _passwordController.text;
+                          setState(() => _isLoading = true);
+                          try {
+                            final email = _emailController.text.trim();
+                            final password = _passwordController.text;
 
-                              final res = await Supabase.instance.client.auth.signInWithPassword(
-                                email: email,
-                                password: password,
-                              );
+                            // Check if email exists in registrations
+                            final existingUser = await Supabase.instance.client
+                                .from('registrations')
+                                .select('email')
+                                .eq('email', email.toLowerCase())
+                                .maybeSingle();
 
-                              if (res.session != null) {
-                                if (mounted) context.go('/status');
-                              } else {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text('Sign in failed. Please check your credentials.')),
-                                  );
-                                }
-                              }
-                            } catch (e) {
+                            if (existingUser == null) {
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Sign in error: $e')),
+                                  const SnackBar(content: Text('Not enrolled yet. Please enroll and then login.')),
                                 );
                               }
-                            } finally {
-                              if (mounted) setState(() => _isLoading = false);
+                              return;
                             }
-                          },
+
+                            final res = await Supabase.instance.client.auth.signInWithPassword(
+                              email: email,
+                              password: password,
+                            );
+
+                            if (res.session != null) {
+                              if (mounted) context.go('/status');
+                            } else {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('You entered wrong password. Please use the correct password.')),
+                                );
+                              }
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Sign in error: $e')),
+                              );
+                            }
+                          } finally {
+                            if (mounted) setState(() => _isLoading = false);
+                          }
+                        },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF7C3AED),
                       foregroundColor: Colors.white,
