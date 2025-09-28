@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
 
 class DashboardScreen extends StatefulWidget {
@@ -66,8 +67,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: const Icon(Icons.person_outline),
             onPressed: () => context.push('/profile'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await Supabase.instance.client.auth.signOut();
+              if (mounted) GoRouter.of(context).go('/login');
+            },
           ),
         ],
         elevation: 0,
@@ -154,43 +162,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(height: 60),
-            // Conditionally show content based on availability
-            isAvailable
-                ? Expanded(
-                    child: GridView.count(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 1.1,
-                      children: [
-                        _buildCard('Assigned\nServices', Icons.location_on, Colors.red, () {
-                          print('DEBUG: Card navigation - going to /assigned-services');
-                          context.push('/assigned-services');
-                        }),
-                        _buildCard('Contact\nPolice Station', Icons.account_balance, Colors.blue, () {
-                          print('DEBUG: Card navigation - going to /contact-police');
-                          context.push('/contact-police');
-                        }),
-                        _buildCard('Other Helpline', Icons.headset_mic, Colors.grey[600]!, () {
-                          print('DEBUG: Card navigation - going to /helpline');
-                          context.push('/helpline');
-                        }),
-                        _buildCard('Community', Icons.groups, Colors.orange, () {
-                          print('DEBUG: Card navigation - going to /community');
-                          context.push('/community');
-                        }),
-                      ],
-                    ),
-                  )
-                : const Expanded(
-                    child: Center(
-                      child: Text(
-                        'You are currently not available.\nTap the indicator above to become available.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 18, color: Colors.grey),
-                      ),
-                    ),
-                  ),
+            // Grid of service cards
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.1,
+                children: [
+                  _buildCard('Assigned\nServices', Icons.location_on, Colors.red, () {
+                    print('DEBUG: Card navigation - going to /assigned-services');
+                    context.push('/assigned-services');
+                  }),
+                  _buildCard('Contact\nPolice Station', Icons.account_balance, Colors.blue, () {
+                    print('DEBUG: Card navigation - going to /contact-police');
+                    context.push('/contact-police');
+                  }),
+                  _buildCard('Other Helpline', Icons.headset_mic, Colors.grey[600]!, () {
+                    print('DEBUG: Card navigation - going to /helpline');
+                    context.push('/helpline');
+                  }),
+                  _buildCard('Community', Icons.groups, Colors.orange, () {
+                    print('DEBUG: Card navigation - going to /community');
+                    context.push('/community');
+                  }),
+                ],
+              ),
+            ),
           ],
         ),
       ),
