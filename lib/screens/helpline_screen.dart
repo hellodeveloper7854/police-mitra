@@ -1,8 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class HelplineScreen extends StatelessWidget {
+class HelplineScreen extends StatefulWidget {
   const HelplineScreen({super.key});
+
+  @override
+  State<HelplineScreen> createState() => _HelplineScreenState();
+}
+
+class _HelplineScreenState extends State<HelplineScreen> {
+  String? _verificationStatus;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVerificationStatus();
+  }
+
+  Future<void> _loadVerificationStatus() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) return;
+      final emailLower = user.email?.toLowerCase();
+      if (emailLower != null) {
+        final res = await Supabase.instance.client
+            .from('registrations')
+            .select('verification_status')
+            .ilike('email', emailLower)
+            .order('created_at', ascending: false)
+            .limit(1);
+        if (res is List && res.isNotEmpty && res.first is Map) {
+          _verificationStatus = (res.first as Map)['verification_status']?.toString();
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +49,14 @@ class HelplineScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.push('/status'),
+          onPressed: () {
+            final normalized = (_verificationStatus ?? '').trim().toLowerCase();
+            if (normalized == 'verified' || normalized == 'approve' || normalized == 'approved') {
+              context.push('/dashboard');
+            } else {
+              context.push('/status');
+            }
+          },
         ),
         // actions: [
         //   IconButton(
