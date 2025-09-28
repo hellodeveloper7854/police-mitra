@@ -10,38 +10,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  String _status = 'Not Available';
-  DateTime? _selectedTime;
+  bool _isAvailable = false; // Initial status
   int _selectedIndex = 0;
-  Timer? _timer;
-  Duration _remainingTime = Duration.zero;
-
-  @override
-  void initState() {
-    super.initState();
-    _startTimer();
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_selectedTime != null) {
-        setState(() {
-          _remainingTime = _selectedTime!.difference(DateTime.now());
-          if (_remainingTime.isNegative) {
-            _status = 'Not Available';
-            _selectedTime = null;
-            _timer?.cancel();
-          }
-        });
-      }
-    });
-  }
 
   void _onItemTapped(int index) {
     print('DEBUG: Bottom nav tapped - index: $index');
@@ -68,33 +38,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  void _updateStatus() async {
-    TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (pickedTime != null) {
-      setState(() {
-        _status = 'Available';
-        _selectedTime = DateTime(
-          DateTime.now().year,
-          DateTime.now().month,
-          DateTime.now().day,
-          pickedTime.hour,
-          pickedTime.minute,
-        );
-      });
-    }
-  }
-
-  String _formatCountdown() {
-    if (_remainingTime.isNegative) return '';
-    return '${_remainingTime.inHours.toString().padLeft(2, '0')}:${(_remainingTime.inMinutes % 60).toString().padLeft(2, '0')}:${(_remainingTime.inSeconds % 60).toString().padLeft(2, '0')}';
+  void _toggleAvailability() {
+    setState(() {
+      _isAvailable = !_isAvailable;
+    });
+    // Here you would also update the database
+    // For now, we just print the action
+    print('Availability updated to: ${_isAvailable ? "Available" : "Not Available"}');
   }
 
   @override
   Widget build(BuildContext context) {
-    bool isAvailable = _selectedTime != null && !_remainingTime.isNegative;
+    bool isAvailable = _isAvailable;
     
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -112,7 +67,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
-            onPressed: () {},
+            onPressed: () => context.push('/profile'),
           ),
         ],
         elevation: 0,
@@ -125,7 +80,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 40),
             // Circular Status Indicator
             GestureDetector(
-              onTap: _updateStatus,
+              onTap: _toggleAvailability,
               child: Container(
                 width: 200,
                 height: 200,
@@ -184,23 +139,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            _status,
+                            isAvailable ? 'Available' : 'Not Available',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          if (isAvailable) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              _formatCountdown(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
                         ],
                       ),
                     ),
@@ -209,33 +154,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(height: 60),
-            // Grid of service cards
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.1,
-                children: [
-                  _buildCard('Assigned\nServices', Icons.location_on, Colors.red, () {
-                    print('DEBUG: Card navigation - going to /assigned-services');
-                    context.push('/assigned-services');
-                  }),
-                  _buildCard('Contact\nPolice Station', Icons.account_balance, Colors.blue, () {
-                    print('DEBUG: Card navigation - going to /contact-police');
-                    context.push('/contact-police');
-                  }),
-                  _buildCard('Other Helpline', Icons.headset_mic, Colors.grey[600]!, () {
-                    print('DEBUG: Card navigation - going to /helpline');
-                    context.push('/helpline');
-                  }),
-                  _buildCard('Community', Icons.groups, Colors.orange, () {
-                    print('DEBUG: Card navigation - going to /community');
-                    context.push('/community');
-                  }),
-                ],
-              ),
-            ),
+            // Conditionally show content based on availability
+            isAvailable
+                ? Expanded(
+                    child: GridView.count(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 1.1,
+                      children: [
+                        _buildCard('Assigned\nServices', Icons.location_on, Colors.red, () {
+                          print('DEBUG: Card navigation - going to /assigned-services');
+                          context.push('/assigned-services');
+                        }),
+                        _buildCard('Contact\nPolice Station', Icons.account_balance, Colors.blue, () {
+                          print('DEBUG: Card navigation - going to /contact-police');
+                          context.push('/contact-police');
+                        }),
+                        _buildCard('Other Helpline', Icons.headset_mic, Colors.grey[600]!, () {
+                          print('DEBUG: Card navigation - going to /helpline');
+                          context.push('/helpline');
+                        }),
+                        _buildCard('Community', Icons.groups, Colors.orange, () {
+                          print('DEBUG: Card navigation - going to /community');
+                          context.push('/community');
+                        }),
+                      ],
+                    ),
+                  )
+                : const Expanded(
+                    child: Center(
+                      child: Text(
+                        'You are currently not available.\nTap the indicator above to become available.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                      ),
+                    ),
+                  ),
           ],
         ),
       ),

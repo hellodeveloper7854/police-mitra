@@ -13,6 +13,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _loading = true;
   Map<String, dynamic>? _record;
+  String? _verificationStatus;
 
   // Controllers for editable fields
   final _fullName = TextEditingController();
@@ -68,6 +69,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (res is List && res.isNotEmpty && res.first is Map<String, dynamic>) {
         _record = res.first as Map<String, dynamic>;
+        _verificationStatus = _record!['verification_status']?.toString();
         _fullName.text = (_record!['full_name'] ?? '').toString();
         _permanentAddress.text = (_record!['permanent_address'] ?? '').toString();
         _currentAddress.text = (_record!['current_address'] ?? '').toString();
@@ -211,7 +213,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.purple),
-            onPressed: () => context.push('/status'),
+            onPressed: () {
+              final normalized = (_verificationStatus ?? '').trim().toLowerCase();
+              if (normalized == 'verified' || normalized == 'approve' || normalized == 'approved') {
+                context.push('/dashboard');
+              } else {
+                context.push('/status');
+              }
+            },
             tooltip: 'Back',
           ),
           IconButton(
