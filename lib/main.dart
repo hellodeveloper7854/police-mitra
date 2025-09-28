@@ -13,7 +13,6 @@ import 'screens/community_screen.dart';
 import 'screens/thank_you_screen.dart';
 import 'screens/verification_status_screen.dart';
 import 'screens/profile_screen.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   //production account
@@ -50,16 +49,6 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/',
       builder: (BuildContext context, GoRouterState state) {
-        // Check for existing session
-        final session = Supabase.instance.client.auth.currentSession;
-        if (session != null && !session.isExpired) {
-          print('DEBUG: Existing session found - redirecting to /status');
-          // Use a post-frame callback to avoid navigation during build
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (context.mounted) context.go('/status');
-          });
-          return const LoginScreen(); // Temporary while redirecting
-        }
         return const LoginScreen();
       },
     ),

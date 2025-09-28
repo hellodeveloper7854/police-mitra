@@ -13,6 +13,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isPasswordObscured = true;
 
   @override
   Widget build(BuildContext context) {
@@ -113,8 +114,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderSide: BorderSide(color: Color(0xFF7C3AED)),
                     ),
                     contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordObscured
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordObscured = !_isPasswordObscured;
+                        });
+                      },
+                    ),
                   ),
-                  obscureText: true,
+                  obscureText: _isPasswordObscured,
                   style: const TextStyle(fontSize: 16),
                 ),
                 const SizedBox(height: 20),
@@ -155,9 +169,20 @@ class _LoginScreenState extends State<LoginScreen> {
                               password: password,
                             );
 
-                            if (res.session != null) {
-                              print('DEBUG: Login successful - navigating to /status');
-                              if (mounted) context.go('/status');
+                            if (res.user != null) {
+                              final user = await Supabase.instance.client
+                                  .from('registrations')
+                                  .select('verification_status')
+                                  .eq('email', email)
+                                  .maybeSingle();
+                              if (mounted) {
+                                if (user != null &&
+                                    user['verification_status'] == 'verified') {
+                                  context.go('/dashboard');
+                                } else {
+                                  context.go('/status');
+                                }
+                              }
                             } else {
                               print('DEBUG: Login failed - no session returned');
                               if (mounted) {
