@@ -16,9 +16,9 @@ class _SignupScreenState extends State<SignupScreen> {
   final _fullNameController = TextEditingController();
   final _permanentAddressController = TextEditingController();
   final _currentAddressController = TextEditingController();
-  String _participation = 'Traffic Management';
-  String _policeStation = 'KALWA POLICE STATION';
-  String _occupation = 'Service/Job';
+  String _participation = 'Select Participation Area';
+  String _policeStation = 'Select Police Station';
+  String _occupation = 'Select Occupation';
   final _mobileController = TextEditingController();
   final _alternateMobileController = TextEditingController();
   final _dobController = TextEditingController();
@@ -29,7 +29,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  String _gender = 'Male';
+  String _gender = 'Select Gender';
   bool _accepted1 = false;
   bool _accepted2 = false;
   bool _accepted3 = false;
@@ -42,14 +42,14 @@ class _SignupScreenState extends State<SignupScreen> {
     if (!['Select Occupation', 'Service/Job', 'Business', 'Student', 'House Wife', 'Unemployed'].contains(_occupation)) {
       _occupation = 'Select Occupation';
     }
-    if (!['Traffic Management', 'Visiting Schools and Colleges to create awareness through PPT on various social topics', 'Visiting Senior Citizens in your Vicinity/Area', 'Working as Volunteer to Promote the Social Media Content shared by Local Police station', 'Crowd management during festival season'].contains(_participation)) {
-      _participation = 'Traffic Management';
+    if (!['Select Participation Area', 'Traffic Management', 'Visiting Schools and Colleges to create awareness through PPT on various social topics', 'Visiting Senior Citizens in your Vicinity/Area', 'Working as Volunteer to Promote the Social Media Content shared by Local Police station', 'Crowd management during festival season'].contains(_participation)) {
+      _participation = 'Select Participation Area';
     }
     if (!['Yes', 'No'].contains(_willingToWork)) {
       _willingToWork = 'Yes';
     }
-    if (!['Male', 'Female', 'Prefer not to say'].contains(_gender)) {
-      _gender = 'Male';
+    if (!['Select Gender', 'Male', 'Female', 'Prefer not to say'].contains(_gender)) {
+      _gender = 'Select Gender';
     }
     if (!['Select Police Station', "KALWA POLICE STATION", "MUMBRA POLICE STATION", "NAUPADA POLICE STATION", "RABODI POLICE STATION", "SHILDOIGHAR POLICE STATION", "THANENAGAR POLICE STATION", "BHIWANDI POLICE STATION", "BHOIWADA POLICE STATION", "KONGAON POLICE STATION", "NARPOLI POLICE STATION", "NIZAMPURA POLICE STATION", "SHANTINAGAR POLICE STATION", "BAZARPETH POLICE STATION", "DOMBIWALI POLICE STATION", "KHADAKPADA POLICE STATION", "KOLSHEWADI POLICE STATION", "MAHATMA PHULE CHOUK POLICE STATION", "MANPADA POLICE STATION", "TILAKNAGAR POLICE STATION", "VISHNUNAGAR POLICE STATION", "AMBARNATH POLICE STATION", "BADALAPUR EAST POLICE STATION", "BADALAPUR WEST POLICE STATION", "CETRAL POLICE STATION", "HILLLINE POLICE STATION", "SHIVAJINAGAR POLICE STATION", "ULHASNAGAR POLICE STATION", "VITTHALWADI POLICE STATION", "CHITALSAR POLICE STATION", "KAPURBAWADI POLICE STATION", "KASARWADAWALI POLICE STATION", "KOPARI POLICE STATION", "SHRINAGAR POLICE STATION", "VARTAKNAGAR POLICE STATION", "WAGALE ESTATE POLICE STATION"].contains(_policeStation)) {
       _policeStation = 'Select Police Station';
@@ -100,8 +100,8 @@ class _SignupScreenState extends State<SignupScreen> {
   final _qualificationController = TextEditingController();
   final _ngoController = TextEditingController();
   final _timeController = TextEditingController();
-  String _bloodGroup = 'A+';
-  String _selectedDay = 'Monday';
+  String _bloodGroup = 'Select Blood Group';
+  String _selectedDay = 'Select Day';
   File? _selectedImage;
   String _willingToWork = 'Yes';
   bool _isLoading = false;
@@ -856,9 +856,9 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Widget _buildDropdownField() {
     // Ensure the current value is valid, reset if not
-    final validOptions = ['Male', 'Female', 'Prefer not to say'];
+    final validOptions = ['Select Gender', 'Male', 'Female', 'Prefer not to say'];
     if (!validOptions.contains(_gender)) {
-      _gender = 'Male';
+      _gender = 'Select Gender';
     }
 
     return DropdownButtonFormField<String>(
@@ -893,6 +893,12 @@ class _SignupScreenState extends State<SignupScreen> {
         setState(() {
           _gender = value!;
         });
+      },
+      validator: (value) {
+        if (value == null || value == 'Select Gender') {
+          return 'Please select your gender';
+        }
+        return null;
       },
     );
   }
@@ -949,6 +955,7 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget _buildParticipationDropdown() {
     // Ensure the current value is valid, reset if not
     final validOptions = [
+      'Select Participation Area',
       'Traffic Management',
       'School/College Awareness Programs',
       'Senior Citizen Visits',
@@ -956,7 +963,7 @@ class _SignupScreenState extends State<SignupScreen> {
       'Festival Crowd Management'
     ];
     if (!validOptions.contains(_participation)) {
-      _participation = 'Traffic Management';
+      _participation = 'Select Participation Area';
     }
 
     return DropdownButtonFormField<String>(
@@ -993,7 +1000,7 @@ class _SignupScreenState extends State<SignupScreen> {
         });
       },
       validator: (value) {
-        if (value == null || value.isEmpty) {
+        if (value == null || value == 'Select Participation Area') {
           return 'Please select a participation option';
         }
         return null;
