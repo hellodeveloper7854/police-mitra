@@ -13,6 +13,7 @@ import 'screens/community_screen.dart';
 import 'screens/thank_you_screen.dart';
 import 'screens/verification_status_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/availability_status_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   //production account
@@ -84,6 +85,12 @@ final GoRouter _router = GoRouter(
       path: '/profile',
       builder: (BuildContext context, GoRouterState state) {
         return const ProfileScreen();
+      },
+    ),
+    GoRoute(
+      path: '/availability-status',
+      builder: (BuildContext context, GoRouterState state) {
+        return const AvailabilityStatusScreen();
       },
     ),
     GoRoute(
