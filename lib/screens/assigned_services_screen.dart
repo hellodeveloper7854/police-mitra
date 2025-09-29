@@ -147,8 +147,8 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings, color: Colors.black),
-            onPressed: () {},
+            icon: const Icon(Icons.person_outline, color: Colors.black),
+            onPressed: () => context.push('/profile'),
           ),
         ],
       ),
