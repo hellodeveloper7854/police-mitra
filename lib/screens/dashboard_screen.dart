@@ -13,6 +13,75 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   bool _isAvailable = false; // Initial status
   int _selectedIndex = 0;
+  Timer? _timer;
+  Duration _elapsedTime = Duration.zero;
+  DateTime? _startTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAvailabilityStatus();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchAvailabilityStatus() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null || user.email == null) return;
+
+      final res = await Supabase.instance.client
+          .from('registrations')
+          .select('current_availability_status')
+          .eq('email', user.email!)
+          .single();
+
+      if (res['current_availability_status'] == 'available') {
+        // Fetch the latest availability log without end_time
+        final logRes = await Supabase.instance.client
+            .from('availability_logs')
+            .select('availability_start_time')
+            .eq('user_email', user.email!)
+            .filter('end_time', 'is', null)
+            .order('availability_start_time', ascending: false)
+            .limit(1)
+            .single();
+
+        setState(() {
+          _isAvailable = true;
+          _startTime = DateTime.parse(logRes['availability_start_time']);
+        });
+        _startTimer();
+      } else {
+        setState(() {
+          _isAvailable = false;
+          _elapsedTime = Duration.zero;
+        });
+        _timer?.cancel();
+      }
+    } catch (e) {
+      print('Error fetching availability: $e');
+      setState(() {
+        _isAvailable = false;
+        _elapsedTime = Duration.zero;
+      });
+    }
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_startTime != null) {
+        setState(() {
+          _elapsedTime = DateTime.now().difference(_startTime!);
+        });
+      }
+    });
+  }
 
   void _onItemTapped(int index) {
     print('DEBUG: Bottom nav tapped - index: $index');
@@ -39,13 +108,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  void _toggleAvailability() {
-    setState(() {
-      _isAvailable = !_isAvailable;
-    });
-    // Here you would also update the database
-    // For now, we just print the action
-    print('Availability updated to: ${_isAvailable ? "Available" : "Not Available"}');
+  Future<void> _toggleAvailability() async {
+    final newStatus = !_isAvailable;
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null || user.email == null) return;
+
+    try {
+      // Update registrations table
+      await Supabase.instance.client
+          .from('registrations')
+          .update({'current_availability_status': newStatus ? 'available' : 'not-available'})
+          .eq('email', user.email!);
+
+      if (newStatus) {
+        // Becoming available - insert start time
+        _startTime = DateTime.now();
+        await Supabase.instance.client.from('availability_logs').insert({
+          'user_email': user.email!,
+          'date': DateTime.now().toIso8601String().split('T')[0],
+          'availability_start_time': _startTime!.toIso8601String(),
+        });
+        _startTimer();
+      } else {
+        // Becoming unavailable - update end time
+        if (_startTime != null) {
+          await Supabase.instance.client
+              .from('availability_logs')
+              .update({'end_time': DateTime.now().toIso8601String()})
+              .eq('user_email', user.email!)
+              .eq('availability_start_time', _startTime!.toIso8601String());
+        }
+        _timer?.cancel();
+        _elapsedTime = Duration.zero;
+      }
+
+      setState(() {
+        _isAvailable = newStatus;
+      });
+
+      print('Availability updated to: ${newStatus ? "Available" : "Not Available"}');
+    } catch (e) {
+      print('Error updating availability: $e');
+      // Optionally show snackbar
+    }
   }
 
   @override
@@ -154,6 +259,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          if (isAvailable) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              '${_elapsedTime.inHours.toString().padLeft(2, '0')}:${(_elapsedTime.inMinutes % 60).toString().padLeft(2, '0')}:${(_elapsedTime.inSeconds % 60).toString().padLeft(2, '0')}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -161,7 +276,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 60),
+            const SizedBox(height: 20),
+            Text(
+              isAvailable
+                  ? 'Click to make your status unavailable'
+                  : 'Click to make your status available',
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 40),
             // Grid of service cards
             Expanded(
               child: GridView.count(
