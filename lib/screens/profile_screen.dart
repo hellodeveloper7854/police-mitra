@@ -21,7 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _currentAddress = TextEditingController();
   String _participationArea = '';
   final _occupation = TextEditingController();
-  final _policeStation = TextEditingController();
+  String _policeStation = '';
   final _mobileNumber = TextEditingController();
   final _alternateMobileNumber = TextEditingController();
   final _dateOfBirth = TextEditingController();
@@ -32,6 +32,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _availableTime = TextEditingController();
   final _bloodGroup = TextEditingController();
   String _willingToWork = '';
+
+  final List<String> validOptions = [
+    'Select Police Station',
+    'KALWA POLICE STATION',
+    'MUMBRA POLICE STATION',
+    'NAUPADA POLICE STATION',
+    'RABODI POLICE STATION',
+    'SHILDOIGHAR POLICE STATION',
+    'THANENAGAR POLICE STATION',
+    'BHIWANDI POLICE STATION',
+    'BHOIWADA POLICE STATION',
+    'KONGAON POLICE STATION',
+    'NARPOLI POLICE STATION',
+    'NIZAMPURA POLICE STATION',
+    'SHANTINAGAR POLICE STATION',
+    'BAZARPETH POLICE STATION',
+    'DOMBIWALI POLICE STATION',
+    'KHADAKPADA POLICE STATION',
+    'KOLSHEWADI POLICE STATION',
+    'MAHATMA PHULE CHOUK POLICE STATION',
+    'MANPADA POLICE STATION',
+    'TILAKNAGAR POLICE STATION',
+    'VISHNUNAGAR POLICE STATION',
+    'AMBARNATH POLICE STATION',
+    'BADALAPUR EAST POLICE STATION',
+    'BADALAPUR WEST POLICE STATION',
+    'CETRAL POLICE STATION',
+    'HILLLINE POLICE STATION',
+    'SHIVAJINAGAR POLICE STATION',
+    'ULHASNAGAR POLICE STATION',
+    'VITTHALWADI POLICE STATION',
+    'CHITALSAR POLICE STATION',
+    'KAPURBAWADI POLICE STATION',
+    'KASARWADAWALI POLICE STATION',
+    'KOPARI POLICE STATION',
+    'SHRINAGAR POLICE STATION',
+    'VARTAKNAGAR POLICE STATION',
+    'WAGALE ESTATE POLICE STATION'
+  ];
 
   // Read-only
   final _email = TextEditingController();
@@ -75,7 +114,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _currentAddress.text = (_record!['current_address'] ?? '').toString();
         _participationArea = (_record!['participation_area'] ?? '').toString();
         _occupation.text = (_record!['occupation'] ?? '').toString();
-        _policeStation.text = (_record!['police_station'] ?? '').toString();
+        _policeStation = (_record!['police_station'] ?? '').toString();
         _mobileNumber.text = CryptoHelper.decryptText((_record!['mobile_number'] ?? '').toString());
         _alternateMobileNumber.text = CryptoHelper.decryptText((_record!['alternate_mobile_number'] ?? '').toString());
         _dateOfBirth.text = (_record!['date_of_birth'] ?? '').toString();
@@ -113,7 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'current_address': _currentAddress.text,
         'participation_area': _participationArea,
         'occupation': _occupation.text,
-        'police_station': _policeStation.text,
+        'police_station': _policeStation,
         'mobile_number': CryptoHelper.encryptText(_mobileNumber.text),
         'alternate_mobile_number': _alternateMobileNumber.text.isNotEmpty ? CryptoHelper.encryptText(_alternateMobileNumber.text) : null,
         'date_of_birth': _dateOfBirth.text, // assume already ISO
@@ -185,7 +224,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _permanentAddress.dispose();
     _currentAddress.dispose();
     _occupation.dispose();
-    _policeStation.dispose();
     _mobileNumber.dispose();
     _alternateMobileNumber.dispose();
     _dateOfBirth.dispose();
@@ -252,7 +290,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     'Festival Crowd Management'
                   ], (v) => setState(() => _participationArea = _mapParticipationToEnum(v))),
                   _editField('Occupation', _occupation),
-                  _editField('Police Station', _policeStation),
+                  _dropdownField('Police Station', _policeStation, validOptions, (v) => setState(() => _policeStation = v)),
                   _editField('Mobile Number', _mobileNumber, keyboardType: TextInputType.phone),
                   _editField('Alternate Mobile Number', _alternateMobileNumber, keyboardType: TextInputType.phone),
                   _editField('Date of Birth (YYYY-MM-DD)', _dateOfBirth),

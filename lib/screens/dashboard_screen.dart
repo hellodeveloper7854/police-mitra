@@ -165,7 +165,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Image.asset('assets/images/logo.png', height: 30),
             const SizedBox(width: 8),
             const Text(
-              'पोलीस मित्र ठाणे पोलीस',
+              'पोलीस मित्र',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ],
