@@ -23,6 +23,51 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
     _fetchAssignedServices();
   }
 
+  Future<void> _startService(String serviceId) async {
+    try {
+      // Get current time in IST (UTC + 5:30)
+      final nowIST = DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30));
+      final istTimeString = nowIST.toIso8601String();
+
+      await Supabase.instance.client
+          .from('assigned_services')
+          .update({'start_time': istTimeString})
+          .eq('id', serviceId);
+
+      _fetchAssignedServices(); // Refresh data
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to start service: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _endService(String serviceId) async {
+    try {
+      // Get current time in IST (UTC + 5:30)
+      final nowIST = DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30));
+      final istTimeString = nowIST.toIso8601String();
+
+      await Supabase.instance.client
+          .from('assigned_services')
+          .update({
+            'end_time': istTimeString,
+            'status': 'completed'
+          })
+          .eq('id', serviceId);
+
+      _fetchAssignedServices(); // Refresh data
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to end service: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _fetchAssignedServices() async {
     try {
       setState(() {
@@ -56,6 +101,12 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
       _completedServices.clear();
 
       for (final service in services) {
+        // If service is completed (has end_time), put it in completed regardless of date
+        if (service['end_time'] != null) {
+          _completedServices.add(service);
+          continue;
+        }
+
         final dateString = service['assigned_date'] as String?;
         if (dateString == null) continue;
 
@@ -179,7 +230,7 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                ..._todayServices.map((service) => _buildServiceCard(service)),
+                                ..._todayServices.map((service) => _buildServiceCard(service, isTodayService: true)),
                                 const SizedBox(height: 30),
                               ],
 
@@ -237,7 +288,7 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
     );
   }
 
-  Widget _buildServiceCard(Map<String, dynamic> service) {
+  Widget _buildServiceCard(Map<String, dynamic> service, {bool isTodayService = false}) {
     final dateString = service['assigned_date'] as String?;
     if (dateString == null) return const SizedBox.shrink();
 
@@ -328,6 +379,55 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
               ],
             ),
           ),
+
+          // Action Buttons for Today's Services
+          if (isTodayService) ...[
+            const SizedBox(width: 12),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (service['start_time'] == null) ...[
+                  ElevatedButton(
+                    onPressed: () => _startService(service['id'].toString()),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981), // Green color
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                    child: const Text('Start Service'),
+                  ),
+                ] else if (service['end_time'] == null) ...[
+                  ElevatedButton(
+                    onPressed: () => _endService(service['id'].toString()),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4444), // Red color
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                    child: const Text('End Service'),
+                  ),
+                ] else ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text(
+                      'Completed',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF10B981),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
         ],
       ),
     );
