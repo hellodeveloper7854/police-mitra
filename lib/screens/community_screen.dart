@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/footer.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -120,7 +121,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
         backgroundColor: const Color(0xFFFFD700),
         child: const Icon(Icons.add, color: Colors.black),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+      bottomNavigationBar: const FooterWidget(),
     );
   }
 
@@ -475,48 +476,6 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
     );
   }
 
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      height: 80,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildNavItem(Icons.home_outlined, 'Home', false),
-          _buildNavItem(Icons.wifi_outlined, 'Police Station', false),
-          _buildNavItem(Icons.people_outline, 'Community', true),
-          _buildNavItem(Icons.phone_outlined, 'My Duties', false),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, bool isSelected) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          icon,
-          color: isSelected ? const Color(0xFF6B46C1) : Colors.black54,
-          size: 24,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            color: isSelected ? const Color(0xFF6B46C1) : Colors.black54,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
-      ],
-    );
-  }
 
   void _showCreatePostDialog(BuildContext context) {
     final TextEditingController postController = TextEditingController();

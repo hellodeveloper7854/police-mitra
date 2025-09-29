@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import '../widgets/footer.dart';
 
 class AssignedServicesScreen extends StatefulWidget {
   const AssignedServicesScreen({super.key});
@@ -284,7 +285,7 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+      bottomNavigationBar: const FooterWidget(),
     );
   }
 
@@ -433,46 +434,4 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
     );
   }
 
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      height: 80,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildNavItem(Icons.home_outlined, 'Home', false),
-          _buildNavItem(Icons.wifi_outlined, 'Wi-Fi', false),
-          // _buildNavItem(Icons.people_outline, 'Community', false),
-          _buildNavItem(Icons.phone_outlined, 'Contact', true),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, bool isSelected) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          icon,
-          color: isSelected ? const Color(0xFF6B46C1) : Colors.black54,
-          size: 24,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: isSelected ? const Color(0xFF6B46C1) : Colors.black54,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
-      ],
-    );
-  }
 }

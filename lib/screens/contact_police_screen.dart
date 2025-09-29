@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../widgets/footer.dart';
 
 class ContactPoliceScreen extends StatefulWidget {
   const ContactPoliceScreen({super.key});
@@ -204,6 +205,7 @@ class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: const FooterWidget(),
     );
   }
 

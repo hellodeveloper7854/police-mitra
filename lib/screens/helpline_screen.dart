@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../widgets/footer.dart';
 
 class HelplineScreen extends StatefulWidget {
   const HelplineScreen({super.key});
@@ -194,7 +195,7 @@ class _HelplineScreenState extends State<HelplineScreen> {
           ],
         ),
       ),
-      // bottomNavigationBar: _buildBottomNavigationBar(),
+      bottomNavigationBar: const FooterWidget(),
     );
   }
 

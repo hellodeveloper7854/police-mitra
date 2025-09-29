@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/footer.dart';
 
 class VerificationStatusScreen extends StatefulWidget {
   const VerificationStatusScreen({super.key});
@@ -132,6 +133,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: const FooterWidget(),
     );
   }
 

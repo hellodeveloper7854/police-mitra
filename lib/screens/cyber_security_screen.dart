@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
+import '../widgets/footer.dart';
 
 class CyberSecurityScreen extends StatelessWidget {
   const CyberSecurityScreen({super.key});
@@ -296,6 +297,7 @@ class CyberSecurityScreen extends StatelessWidget {
           ],
         ),
       ),
+      bottomNavigationBar: const FooterWidget(),
     );
   }
 

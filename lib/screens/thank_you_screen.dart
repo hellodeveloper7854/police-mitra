@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../widgets/footer.dart';
 
 class ThankYouScreen extends StatelessWidget {
   const ThankYouScreen({super.key});
@@ -79,6 +80,7 @@ class ThankYouScreen extends StatelessWidget {
           ),
         ),
       ),
+      bottomNavigationBar: const FooterWidget(),
     );
   }
 
