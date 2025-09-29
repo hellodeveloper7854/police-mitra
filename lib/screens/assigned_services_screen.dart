@@ -296,6 +296,18 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
     final serviceDate = DateTime.parse(dateString);
     final formattedDate = DateFormat('dd/MM/yyyy').format(serviceDate);
 
+    // Calculate duration if both start and end times exist
+    String? durationText;
+    if (service['start_time'] != null && service['end_time'] != null) {
+      final startTime = DateTime.parse(service['start_time']);
+      final endTime = DateTime.parse(service['end_time']);
+      final duration = endTime.difference(startTime);
+      final hours = duration.inHours;
+      final minutes = duration.inMinutes.remainder(60);
+      final seconds = duration.inSeconds.remainder(60);
+      durationText = '${hours}h ${minutes}m ${seconds}s';
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.only(bottom: 12),
@@ -304,131 +316,151 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Service Image/Icon
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.white,
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                'assets/images/event_image.png', // You can use a service image
-                height: 50,
-                width: 50,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Color(0xFF60A5FA),
-                          Color(0xFF3B82F6),
-                        ],
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.assignment,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  );
-                },
+          // Duration at top right if available
+          if (durationText != null) ...[
+            Align(
+              alignment: Alignment.topRight,
+              child: Text(
+                durationText,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF6B46C1), // Purple color to match theme
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-
-          // Service Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  (service['service_name'] as String?) ?? 'Service',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+            const SizedBox(height: 8),
+          ],
+          Row(
+            children: [
+              // Service Image/Icon
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.white,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/images/event_image.png', // You can use a service image
+                    height: 50,
+                    width: 50,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF60A5FA),
+                              Color(0xFF3B82F6),
+                            ],
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.assignment,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      );
+                    },
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  formattedDate,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.black54,
-                  ),
-                ),
-                if (service['location'] != null && service['location'] is String) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    service['location'] as String,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.black54,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
+              ),
+              const SizedBox(width: 16),
 
-          // Action Buttons for Today's Services
-          if (isTodayService) ...[
-            const SizedBox(width: 12),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (service['start_time'] == null) ...[
-                  ElevatedButton(
-                    onPressed: () => _startService(service['id'].toString()),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF10B981), // Green color
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                    ),
-                    child: const Text('Start Service'),
-                  ),
-                ] else if (service['end_time'] == null) ...[
-                  ElevatedButton(
-                    onPressed: () => _endService(service['id'].toString()),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEF4444), // Red color
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                    ),
-                    child: const Text('End Service'),
-                  ),
-                ] else ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Text(
-                      'Completed',
-                      style: TextStyle(
-                        fontSize: 12,
+              // Service Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      (service['service_name'] as String?) ?? 'Service',
+                      style: const TextStyle(
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF10B981),
+                        color: Colors.black87,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      formattedDate,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    if (service['location'] != null && service['location'] is String) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        service['location'] as String,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              // Action Buttons for Today's Services
+              if (isTodayService) ...[
+                const SizedBox(width: 12),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (service['start_time'] == null) ...[
+                      ElevatedButton(
+                        onPressed: () => _startService(service['id'].toString()),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF10B981), // Green color
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
+                        child: const Text('Start Service'),
+                      ),
+                    ] else if (service['end_time'] == null) ...[
+                      ElevatedButton(
+                        onPressed: () => _endService(service['id'].toString()),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFEF4444), // Red color
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
+                        child: const Text('End Service'),
+                      ),
+                    ] else ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'Completed',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF10B981),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ],
-            ),
-          ],
+            ],
+          ),
         ],
       ),
     );
