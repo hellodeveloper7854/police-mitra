@@ -103,26 +103,26 @@ class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
                   width: 60,
                 ),
                 const SizedBox(width: 12),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'भारतीय पुलिस',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    Text(
-                      'INDIAN POLICE',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ],
-                ),
+                // const Column(
+                //   crossAxisAlignment: CrossAxisAlignment.start,
+                //   children: [
+                //     Text(
+                //       'भारतीय पुलिस',
+                //       style: TextStyle(
+                //         fontSize: 14,
+                //         fontWeight: FontWeight.w500,
+                //         color: Colors.black87,
+                //       ),
+                //     ),
+                //     Text(
+                //       'INDIAN POLICE',
+                //       style: TextStyle(
+                //         fontSize: 10,
+                //         color: Colors.black54,
+                //       ),
+                //     ),
+                //   ],
+                // ),
               ],
             ),
             const SizedBox(height: 40),
