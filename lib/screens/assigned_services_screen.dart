@@ -447,7 +447,7 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
         children: [
           _buildNavItem(Icons.home_outlined, 'Home', false),
           _buildNavItem(Icons.wifi_outlined, 'Wi-Fi', false),
-          _buildNavItem(Icons.people_outline, 'Community', false),
+          // _buildNavItem(Icons.people_outline, 'Community', false),
           _buildNavItem(Icons.phone_outlined, 'Contact', true),
         ],
       ),

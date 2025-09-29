@@ -296,22 +296,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 mainAxisSpacing: 16,
                 childAspectRatio: 1.1,
                 children: [
-                  _buildCard('Assigned\nServices', Icons.location_on, Colors.red, () {
+                  _buildCard('Assigned\nServices', 'assets/images/location 1.png', Colors.red, () {
                     print('DEBUG: Card navigation - going to /assigned-services');
                     context.push('/assigned-services');
                   }),
-                  _buildCard('Contact\nPolice Station', Icons.account_balance, Colors.blue, () {
+                  _buildCard('Contact\nPolice Station', 'assets/images/helpline 2.png', Colors.blue, () {
                     print('DEBUG: Card navigation - going to /contact-police');
                     context.push('/contact-police');
                   }),
-                  _buildCard('Other Helpline', Icons.headset_mic, Colors.grey[600]!, () {
+                  _buildCard('Other Helpline', 'assets/images/helpline.png', Colors.grey[600]!, () {
                     print('DEBUG: Card navigation - going to /helpline');
                     context.push('/helpline');
                   }),
-                  _buildCard('Community', Icons.groups, Colors.orange, () {
-                    print('DEBUG: Card navigation - going to /community');
-                    context.push('/community');
-                  }),
+                  // _buildCard('Community', Icons.groups, Colors.orange, () {
+                  //   print('DEBUG: Card navigation - going to /community');
+                  //   context.push('/community');
+                  // }),
                 ],
               ),
             ),
@@ -329,14 +329,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: Icon(Icons.wifi_tethering),
             label: 'Police Station',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.groups),
-            label: 'Community',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assignment),
-            label: 'My Duties',
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.groups),
+          //   label: 'Community',
+          // ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.assignment),
+          //   label: 'My Duties',
+          // ),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.blue,
@@ -346,7 +346,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildCard(String title, IconData icon, Color iconColor, VoidCallback onTap) {
+  Widget _buildCard(String title, String imagePath, Color iconColor, VoidCallback onTap) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -356,24 +356,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, size: 32, color: iconColor),
+              Image.asset(
+                imagePath,
+                width: 40,
+                height: 40,
+                fit: BoxFit.contain,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Text(
                 title,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: Colors.grey[700],
                 ),
