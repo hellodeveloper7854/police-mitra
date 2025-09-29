@@ -162,136 +162,139 @@ class _DashboardScreenState extends State<DashboardScreen> {
         elevation: 0,
         backgroundColor: Colors.white,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 40),
-            // Circular Status Indicator
-            GestureDetector(
-              onTap: _toggleAvailability,
-              child: Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 0,
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Outer ring
-                    Container(
-                      width: 180,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isAvailable 
-                            ? Colors.green.withOpacity(0.3) 
-                            : Colors.red.withOpacity(0.3),
-                          width: 2,
-                        ),
+      body: RefreshIndicator(
+        onRefresh: _fetchAvailabilityStatus,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+              // Circular Status Indicator
+              GestureDetector(
+                onTap: _toggleAvailability,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 0,
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
                       ),
-                    ),
-                    // Middle ring
-                    Container(
-                      width: 160,
-                      height: 160,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isAvailable 
-                            ? Colors.green.withOpacity(0.5) 
-                            : Colors.red.withOpacity(0.5),
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                    // Inner circle
-                    Container(
-                      width: 140,
-                      height: 140,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isAvailable ? Colors.green : Colors.red,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            isAvailable ? 'Available' : 'Not Available',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                    ],
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Outer ring
+                      Container(
+                        width: 180,
+                        height: 180,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isAvailable
+                              ? Colors.green.withOpacity(0.3)
+                              : Colors.red.withOpacity(0.3),
+                            width: 2,
                           ),
-                          if (isAvailable) ...[
-                            const SizedBox(height: 8),
+                        ),
+                      ),
+                      // Middle ring
+                      Container(
+                        width: 160,
+                        height: 160,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isAvailable
+                              ? Colors.green.withOpacity(0.5)
+                              : Colors.red.withOpacity(0.5),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      // Inner circle
+                      Container(
+                        width: 140,
+                        height: 140,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isAvailable ? Colors.green : Colors.red,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
                             Text(
-                              '${_elapsedTime.inHours.toString().padLeft(2, '0')}:${(_elapsedTime.inMinutes % 60).toString().padLeft(2, '0')}:${(_elapsedTime.inSeconds % 60).toString().padLeft(2, '0')}',
+                              isAvailable ? 'Available' : 'Not Available',
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 14,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
+                            if (isAvailable) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                '${_elapsedTime.inHours.toString().padLeft(2, '0')}:${(_elapsedTime.inMinutes % 60).toString().padLeft(2, '0')}:${(_elapsedTime.inSeconds % 60).toString().padLeft(2, '0')}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                isAvailable
+                    ? 'Click on above button to Make Me available'
+                    : 'Click on above button to Make Me available',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+              // Grid of service cards
+              Expanded(
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.1,
+                  children: [
+                    _buildCard('Assigned\nServices', 'assets/images/location 1.png', Colors.red, () {
+                      print('DEBUG: Card navigation - going to /assigned-services');
+                      context.push('/assigned-services');
+                    }),
+                    _buildCard('Contact\nPolice Station', 'assets/images/helpline 2.png', Colors.blue, () {
+                      print('DEBUG: Card navigation - going to /contact-police');
+                      context.push('/contact-police');
+                    }),
+                    _buildCard('Other Helpline', 'assets/images/helpline.png', Colors.grey[600]!, () {
+                      print('DEBUG: Card navigation - going to /helpline');
+                      context.push('/helpline');
+                    }),
+                    // _buildCard('Community', Icons.groups, Colors.orange, () {
+                    //   print('DEBUG: Card navigation - going to /community');
+                    //   context.push('/community');
+                    // }),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              isAvailable
-                  ? 'Click on above button to Make Me available'
-                  : 'Click on above button to Make Me available',
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 40),
-            // Grid of service cards
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.1,
-                children: [
-                  _buildCard('Assigned\nServices', 'assets/images/location 1.png', Colors.red, () {
-                    print('DEBUG: Card navigation - going to /assigned-services');
-                    context.push('/assigned-services');
-                  }),
-                  _buildCard('Contact\nPolice Station', 'assets/images/helpline 2.png', Colors.blue, () {
-                    print('DEBUG: Card navigation - going to /contact-police');
-                    context.push('/contact-police');
-                  }),
-                  _buildCard('Other Helpline', 'assets/images/helpline.png', Colors.grey[600]!, () {
-                    print('DEBUG: Card navigation - going to /helpline');
-                    context.push('/helpline');
-                  }),
-                  // _buildCard('Community', Icons.groups, Colors.orange, () {
-                  //   print('DEBUG: Card navigation - going to /community');
-                  //   context.push('/community');
-                  // }),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: const FooterWidget(),

@@ -107,29 +107,32 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
       ),
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: _loading
-                ? const CircularProgressIndicator(color: Colors.purple)
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(_getStatusIcon(), color: _status == 'rejected' ? Colors.red : Colors.purple, size: 96),
-                      const SizedBox(height: 24),
-                      Text(
-                        _message ?? '',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                      const SizedBox(height: 24),
-                      if (_status == 'verified' || _status == 'approve' || _status == 'approved') ...[
-                        _buildCard('Other Helpline', Icons.headset_mic, Colors.grey[600]!, () {
-                          context.push('/helpline');
-                        }),
+        child: RefreshIndicator(
+          onRefresh: _loadStatus,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: _loading
+                  ? const CircularProgressIndicator(color: Colors.purple)
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(_getStatusIcon(), color: _status == 'rejected' ? Colors.red : Colors.purple, size: 96),
+                        const SizedBox(height: 24),
+                        Text(
+                          _message ?? '',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 18),
+                        ),
+                        const SizedBox(height: 24),
+                        if (_status == 'verified' || _status == 'approve' || _status == 'approved') ...[
+                          _buildCard('Other Helpline', Icons.headset_mic, Colors.grey[600]!, () {
+                            context.push('/helpline');
+                          }),
+                        ],
                       ],
-                    ],
-                  ),
+                    ),
+            ),
           ),
         ),
       ),

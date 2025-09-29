@@ -74,92 +74,95 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Logo
-            Row(
-              children: [
-                Image.asset(
-                  'assets/images/logo.png',
-                  height: 60,
-                  width: 60,
-                ),
-                const SizedBox(width: 12),
-              ],
-            ),
-            const SizedBox(height: 40),
-
-            // Title
-            RichText(
-              text: const TextSpan(
+      body: RefreshIndicator(
+        onRefresh: _fetchAvailabilityLogs,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Logo
+              Row(
                 children: [
-                  TextSpan(
-                    text: 'My ',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
+                  Image.asset(
+                    'assets/images/logo.png',
+                    height: 60,
+                    width: 60,
                   ),
-                  TextSpan(
-                    text: 'Availability',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF6B46C1), // Purple color
-                    ),
-                  ),
+                  const SizedBox(width: 12),
                 ],
               ),
-            ),
-            const SizedBox(height: 30),
+              const SizedBox(height: 40),
 
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error != null
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                _error!,
-                                style: const TextStyle(color: Colors.red),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton(
-                                onPressed: _fetchAvailabilityLogs,
-                                child: const Text('Retry'),
-                              ),
-                            ],
-                          ),
-                        )
-                      : _availabilityLogs.isEmpty
-                          ? const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(40.0),
-                                child: Text(
-                                  'No availability logs found',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey,
+              // Title
+              RichText(
+                text: const TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'My ',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    TextSpan(
+                      text: 'Availability',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF6B46C1), // Purple color
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 30),
+
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _error != null
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  _error!,
+                                  style: const TextStyle(color: Colors.red),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: _fetchAvailabilityLogs,
+                                  child: const Text('Retry'),
+                                ),
+                              ],
+                            ),
+                          )
+                        : _availabilityLogs.isEmpty
+                            ? const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(40.0),
+                                  child: Text(
+                                    'No availability logs found',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey,
+                                    ),
                                   ),
                                 ),
+                              )
+                            : ListView.builder(
+                                itemCount: _availabilityLogs.length,
+                                itemBuilder: (context, index) {
+                                  final log = _availabilityLogs[index];
+                                  return _buildAvailabilityCard(log);
+                                },
                               ),
-                            )
-                          : ListView.builder(
-                              itemCount: _availabilityLogs.length,
-                              itemBuilder: (context, index) {
-                                final log = _availabilityLogs[index];
-                                return _buildAvailabilityCard(log);
-                              },
-                            ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: const FooterWidget(),

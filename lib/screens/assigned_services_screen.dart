@@ -152,137 +152,140 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Logo
-            Row(
-              children: [
-                Image.asset(
-                  'assets/images/logo.png',
-                  height: 60,
-                  width: 60,
-                ),
-                const SizedBox(width: 12),
-              ],
-            ),
-            const SizedBox(height: 40),
-
-            // Title
-            RichText(
-              text: const TextSpan(
+      body: RefreshIndicator(
+        onRefresh: _fetchAssignedServices,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Logo
+              Row(
                 children: [
-                  TextSpan(
-                    text: 'My ',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
+                  Image.asset(
+                    'assets/images/logo.png',
+                    height: 60,
+                    width: 60,
                   ),
-                  TextSpan(
-                    text: 'Services',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF6B46C1), // Purple color
-                    ),
-                  ),
+                  const SizedBox(width: 12),
                 ],
               ),
-            ),
-            const SizedBox(height: 30),
+              const SizedBox(height: 40),
 
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error != null
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                _error!,
-                                style: const TextStyle(color: Colors.red),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton(
-                                onPressed: _fetchAssignedServices,
-                                child: const Text('Retry'),
-                              ),
-                            ],
-                          ),
-                        )
-                      : SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Today's Services Section
-                              if (_todayServices.isNotEmpty) ...[
-                                const Text(
-                                  'Today\'s Services',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black87,
-                                  ),
+              // Title
+              RichText(
+                text: const TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'My ',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    TextSpan(
+                      text: 'Services',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF6B46C1), // Purple color
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 30),
+
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _error != null
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  _error!,
+                                  style: const TextStyle(color: Colors.red),
+                                  textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 16),
-                                ..._todayServices.map((service) => _buildServiceCard(service, isTodayService: true)),
-                                const SizedBox(height: 30),
-                              ],
-
-                              // Upcoming Services Section
-                              if (_upcomingServices.isNotEmpty) ...[
-                                const Text(
-                                  'Upcoming Services',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black87,
-                                  ),
+                                ElevatedButton(
+                                  onPressed: _fetchAssignedServices,
+                                  child: const Text('Retry'),
                                 ),
-                                const SizedBox(height: 16),
-                                ..._upcomingServices.map((service) => _buildServiceCard(service)),
-                                const SizedBox(height: 30),
                               ],
-
-                              // Completed Services Section
-                              if (_completedServices.isNotEmpty) ...[
-                                const Text(
-                                  'Completed Services',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black87,
+                            ),
+                          )
+                        : SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Today's Services Section
+                                if (_todayServices.isNotEmpty) ...[
+                                  const Text(
+                                    'Today\'s Services',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 16),
-                                ..._completedServices.map((service) => _buildServiceCard(service)),
-                              ],
+                                  const SizedBox(height: 16),
+                                  ..._todayServices.map((service) => _buildServiceCard(service, isTodayService: true)),
+                                  const SizedBox(height: 30),
+                                ],
 
-                              // No services message
-                              if (_todayServices.isEmpty && _upcomingServices.isEmpty && _completedServices.isEmpty)
-                                const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(40.0),
-                                    child: Text(
-                                      'No assigned services found',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.grey,
+                                // Upcoming Services Section
+                                if (_upcomingServices.isNotEmpty) ...[
+                                  const Text(
+                                    'Upcoming Services',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ..._upcomingServices.map((service) => _buildServiceCard(service)),
+                                  const SizedBox(height: 30),
+                                ],
+
+                                // Completed Services Section
+                                if (_completedServices.isNotEmpty) ...[
+                                  const Text(
+                                    'Completed Services',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ..._completedServices.map((service) => _buildServiceCard(service)),
+                                ],
+
+                                // No services message
+                                if (_todayServices.isEmpty && _upcomingServices.isEmpty && _completedServices.isEmpty)
+                                  const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(40.0),
+                                      child: Text(
+                                        'No assigned services found',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.grey,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: const FooterWidget(),

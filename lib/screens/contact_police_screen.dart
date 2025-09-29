@@ -90,119 +90,122 @@ class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Logo
-            Row(
-              children: [
-                Image.asset(
-                  'assets/images/logo.png',
-                  height: 60,
-                  width: 60,
-                ),
-                const SizedBox(width: 12),
-                // const Column(
-                //   crossAxisAlignment: CrossAxisAlignment.start,
-                //   children: [
-                //     Text(
-                //       'भारतीय पुलिस',
-                //       style: TextStyle(
-                //         fontSize: 14,
-                //         fontWeight: FontWeight.w500,
-                //         color: Colors.black87,
-                //       ),
-                //     ),
-                //     Text(
-                //       'INDIAN POLICE',
-                //       style: TextStyle(
-                //         fontSize: 10,
-                //         color: Colors.black54,
-                //       ),
-                //     ),
-                //   ],
-                // ),
-              ],
-            ),
-            const SizedBox(height: 40),
-
-            // Title
-            const Text(
-              'Police Station',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+      body: RefreshIndicator(
+        onRefresh: _fetchData,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Logo
+              Row(
+                children: [
+                  Image.asset(
+                    'assets/images/logo.png',
+                    height: 60,
+                    width: 60,
+                  ),
+                  const SizedBox(width: 12),
+                  // const Column(
+                  //   crossAxisAlignment: CrossAxisAlignment.start,
+                  //   children: [
+                  //     Text(
+                  //       'भारतीय पुलिस',
+                  //       style: TextStyle(
+                  //         fontSize: 14,
+                  //         fontWeight: FontWeight.w500,
+                  //         color: Colors.black87,
+                  //       ),
+                  //     ),
+                  //     Text(
+                  //       'INDIAN POLICE',
+                  //       style: TextStyle(
+                  //         fontSize: 10,
+                  //         color: Colors.black54,
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
+                ],
               ),
-            ),
-            const Text(
-              'Contact',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF6B46C1), // Purple color
-              ),
-            ),
-            const SizedBox(height: 30),
+              const SizedBox(height: 40),
 
-            // Station Name
-            if (isLoading)
-              const Center(child: CircularProgressIndicator())
-            else if (error != null)
-              Center(
-                child: Text(
-                  'Error: $error',
-                  style: const TextStyle(color: Colors.red),
-                ),
-              )
-            else
-              Text(
-                policeStation ?? 'Unknown Station',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+              // Title
+              const Text(
+                'Police Station',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
               ),
-            const SizedBox(height: 20),
+              const Text(
+                'Contact',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF6B46C1), // Purple color
+                ),
+              ),
+              const SizedBox(height: 30),
 
-            // Police Officers List
-            Expanded(
-              child: isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : error != null
-                      ? Center(
-                          child: Text(
-                            'Error: $error',
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        )
-                      : contacts.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'Data is not existing',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black54,
-                                ),
-                              ),
-                            )
-                          : ListView.builder(
-                              itemCount: contacts.length,
-                              itemBuilder: (context, index) {
-                                final contact = contacts[index];
-                                return Column(
-                                  children: [
-                                    _buildOfficerCard(contact),
-                                    const SizedBox(height: 12),
-                                  ],
-                                );
-                              },
+              // Station Name
+              if (isLoading)
+                const Center(child: CircularProgressIndicator())
+              else if (error != null)
+                Center(
+                  child: Text(
+                    'Error: $error',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                )
+              else
+                Text(
+                  policeStation ?? 'Unknown Station',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              const SizedBox(height: 20),
+
+              // Police Officers List
+              Expanded(
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : error != null
+                        ? Center(
+                            child: Text(
+                              'Error: $error',
+                              style: const TextStyle(color: Colors.red),
                             ),
-            ),
-          ],
+                          )
+                        : contacts.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'Data is not existing',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              )
+                            : ListView.builder(
+                                itemCount: contacts.length,
+                                itemBuilder: (context, index) {
+                                  final contact = contacts[index];
+                                  return Column(
+                                    children: [
+                                      _buildOfficerCard(contact),
+                                      const SizedBox(height: 12),
+                                    ],
+                                  );
+                                },
+                              ),
+              ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: const FooterWidget(),
