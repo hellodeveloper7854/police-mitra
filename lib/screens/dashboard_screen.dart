@@ -255,8 +255,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 20),
             Text(
               isAvailable
-                  ? 'Click to make your status unavailable'
-                  : 'Click to make your status available',
+                  ? 'Click on above button to Make Me available'
+                  : 'Click on above button to Make Me available',
               style: const TextStyle(
                 fontSize: 16,
                 color: Colors.grey,
