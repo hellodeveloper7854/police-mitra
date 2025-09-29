@@ -14,6 +14,7 @@ import 'screens/thank_you_screen.dart';
 import 'screens/verification_status_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/availability_status_screen.dart';
+import 'screens/auth_check_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   //production account
@@ -49,7 +50,9 @@ final GoRouter _router = GoRouter(
   routes: <RouteBase>[
     GoRoute(
       path: '/',
-      redirect: (context, state) => '/login',
+      builder: (BuildContext context, GoRouterState state) {
+        return const AuthCheckScreen();
+      },
     ),
     GoRoute(
       path: '/login',

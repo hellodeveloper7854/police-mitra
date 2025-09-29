@@ -384,8 +384,9 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Event
                     Text(
-                      (service['service_name'] as String?) ?? 'Service',
+                      'Event: ${(service['service_name'] as String?) ?? 'N/A'}',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -393,23 +394,23 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
                       ),
                     ),
                     const SizedBox(height: 4),
+                    // Participation Area
                     Text(
-                      formattedDate,
+                      'Participation Area: ${(service['participation_area'] as String?) ?? 'N/A'}',
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.black54,
                       ),
                     ),
-                    if (service['location'] != null && service['location'] is String) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        service['location'] as String,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.black54,
-                        ),
+                    const SizedBox(height: 2),
+                    // Date
+                    Text(
+                      'Date: $formattedDate',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
                       ),
-                    ],
+                    ),
                   ],
                 ),
               ),
