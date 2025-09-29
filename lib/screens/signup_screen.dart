@@ -621,55 +621,60 @@ class _SignupScreenState extends State<SignupScreen> {
                           }
                           setState(() => _isLoading = true);
                           try {
-                            final response = await Supabase.instance.client.auth.signUp(
-                              email: _emailController.text.trim(),
-                              password: _passwordController.text,
-                            );
-                            if (response.user != null && Supabase.instance.client.auth.currentSession != null) {
-                              // First, create user credentials table entry
-                              await Supabase.instance.client.from('user_credentials').insert({
-                                'email': _emailController.text.trim().toLowerCase(),
-                                'password': _passwordController.text,
-                                'created_at': DateTime.now().toIso8601String(),
-                              });
+                            final email = _emailController.text.trim().toLowerCase();
+                            final password = _passwordController.text;
 
-                              // Then create the main registration record
-                              await Supabase.instance.client.from('registrations').insert({
-                                'full_name': _fullNameController.text,
-                                'permanent_address': _permanentAddressController.text,
-                                'current_address': _currentAddressController.text,
-                                'participation_area': _mapParticipationToEnum(_participation),
-                                'occupation': _occupation,
-                                'police_station': _policeStation,
-                                'mobile_number': CryptoHelper.encryptText(_mobileController.text),
-                                'alternate_mobile_number': _alternateMobileController.text.isNotEmpty ? CryptoHelper.encryptText(_alternateMobileController.text) : null,
-                                'date_of_birth': _toIsoDate(_dobController.text),
-                                'college_details': _collegeNameController.text.isNotEmpty
-                                  ? _occupation == 'Student' && _academicDetailsController.text.isNotEmpty
-                                      ? '${_collegeNameController.text} - ${_academicDetailsController.text}'
-                                      : _collegeNameController.text
-                                  : null,
-                                'identity_numbers': 'PAN:${_panCardController.text},AADHAR:${CryptoHelper.encryptText(_aadharCardController.text)}',
-                                'gender': _gender,
-                                'qualification': _qualificationController.text,
-                                'ngo_affiliation': _ngoController.text.isNotEmpty ? _ngoController.text : null,
-                                'available_time': '${_selectedDay} ${_timeController.text}',
-                                'blood_group': _bloodGroup,
-                                'willing_to_work': _willingToWork,
-                                'email': _emailController.text.trim().toLowerCase(),
-                                'police_mitra_acceptance': true,
-                              });
-                              if (mounted) context.go('/thank-you');
-                            } else if (response.user != null && Supabase.instance.client.auth.currentSession == null) {
+                            // Check if email already exists
+                            final existing = await Supabase.instance.client
+                                .from('user_credentials')
+                                .select('email')
+                                .eq('email', email)
+                                .maybeSingle();
+
+                            if (existing != null) {
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Please verify your email, then sign in to complete registration.'),
-                                  ),
+                                  const SnackBar(content: Text('Email already registered. Please sign in instead.')),
                                 );
-                                context.go('/thank-you');
                               }
+                              return;
                             }
+
+                            // Insert into user_credentials
+                            await Supabase.instance.client.from('user_credentials').insert({
+                              'email': email,
+                              'password': password,
+                              'created_at': DateTime.now().toIso8601String(),
+                            });
+
+                            // Insert into registrations
+                            await Supabase.instance.client.from('registrations').insert({
+                              'full_name': _fullNameController.text,
+                              'permanent_address': _permanentAddressController.text,
+                              'current_address': _currentAddressController.text,
+                              'participation_area': _mapParticipationToEnum(_participation),
+                              'occupation': _occupation,
+                              'police_station': _policeStation,
+                              'mobile_number': CryptoHelper.encryptText(_mobileController.text),
+                              'alternate_mobile_number': _alternateMobileController.text.isNotEmpty ? CryptoHelper.encryptText(_alternateMobileController.text) : null,
+                              'date_of_birth': _toIsoDate(_dobController.text),
+                              'college_details': _collegeNameController.text.isNotEmpty
+                                ? _occupation == 'Student' && _academicDetailsController.text.isNotEmpty
+                                    ? '${_collegeNameController.text} - ${_academicDetailsController.text}'
+                                    : _collegeNameController.text
+                                : null,
+                              'identity_numbers': 'PAN:${_panCardController.text},AADHAR:${CryptoHelper.encryptText(_aadharCardController.text)}',
+                              'gender': _gender,
+                              'qualification': _qualificationController.text,
+                              'ngo_affiliation': _ngoController.text.isNotEmpty ? _ngoController.text : null,
+                              'available_time': '${_selectedDay} ${_timeController.text}',
+                              'blood_group': _bloodGroup,
+                              'willing_to_work': _willingToWork,
+                              'email': email,
+                              'police_mitra_acceptance': true,
+                            });
+
+                            if (mounted) context.go('/thank-you');
                           } catch (e) {
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/footer.dart';
 
 class AvailabilityStatusScreen extends StatefulWidget {
@@ -29,8 +30,9 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
         _error = null;
       });
 
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null || user.email == null) {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('user_email');
+      if (email == null) {
         setState(() {
           _error = 'User not authenticated';
           _isLoading = false;
@@ -41,7 +43,7 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
       final response = await Supabase.instance.client
           .from('availability_logs')
           .select('*')
-          .eq('user_email', user.email!)
+          .eq('user_email', email)
           .order('date', ascending: false)
           .order('created_at', ascending: false);
 

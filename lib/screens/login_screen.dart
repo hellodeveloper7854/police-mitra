@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -161,15 +162,20 @@ class _LoginScreenState extends State<LoginScreen> {
                         : () async {
                           setState(() => _isLoading = true);
                           try {
-                            final email = _emailController.text.trim();
+                            final email = _emailController.text.trim().toLowerCase();
                             final password = _passwordController.text;
 
-                            final res = await Supabase.instance.client.auth.signInWithPassword(
-                              email: email,
-                              password: password,
-                            );
+                            final userCred = await Supabase.instance.client
+                                .from('user_credentials')
+                                .select('email')
+                                .eq('email', email)
+                                .eq('password', password)
+                                .maybeSingle();
 
-                            if (res.user != null) {
+                            if (userCred != null) {
+                              final prefs = await SharedPreferences.getInstance();
+                              await prefs.setString('user_email', email);
+
                               final user = await Supabase.instance.client
                                   .from('registrations')
                                   .select('verification_status')
@@ -184,13 +190,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                 }
                               }
                             } else {
-                              print('DEBUG: Login failed - no session returned');
                               if (mounted) {
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
-                                    title: const Text('Invalid Password'),
-                                    content: const Text('You entered an invalid password. Please try again.'),
+                                    title: const Text('Invalid Credentials'),
+                                    content: const Text('You entered invalid email or password. Please try again.'),
                                     actions: [
                                       TextButton(
                                         onPressed: () => Navigator.of(context).pop(),
@@ -203,25 +208,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             }
                           } catch (e) {
                             if (mounted) {
-                              if (e.toString().contains('Invalid login credentials')) {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text('Invalid Password'),
-                                    content: const Text('You entered an invalid password. Please try again.'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.of(context).pop(),
-                                        child: const Text('OK'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Sign in error: $e')),
-                                );
-                              }
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Sign in error: $e')),
+                              );
                             }
                           } finally {
                             if (mounted) setState(() => _isLoading = false);

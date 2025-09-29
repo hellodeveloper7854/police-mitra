@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/footer.dart';
 
 class AssignedServicesScreen extends StatefulWidget {
@@ -76,8 +77,9 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
         _error = null;
       });
 
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null || user.email == null) {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('user_email');
+      if (email == null) {
         setState(() {
           _error = 'User not authenticated';
           _isLoading = false;
@@ -88,7 +90,7 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
       final response = await Supabase.instance.client
           .from('assigned_services')
           .select('*')
-          .eq('user_email', user.email!)
+          .eq('user_email', email)
           .order('assigned_date', ascending: true);
 
       final services = List<Map<String, dynamic>>.from(response);

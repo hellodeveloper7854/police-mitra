@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/footer.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -31,13 +32,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _fetchAvailabilityStatus() async {
     try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null || user.email == null) return;
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('user_email');
+      if (email == null) return;
 
       final res = await Supabase.instance.client
           .from('registrations')
           .select('current_availability_status')
-          .eq('email', user.email!)
+          .eq('email', email)
           .single();
 
       if (res['current_availability_status'] == 'available') {
@@ -45,7 +47,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final logRes = await Supabase.instance.client
             .from('availability_logs')
             .select('availability_start_time')
-            .eq('user_email', user.email!)
+            .eq('user_email', email)
             .filter('end_time', 'is', null)
             .order('availability_start_time', ascending: false)
             .limit(1)
@@ -86,21 +88,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _toggleAvailability() async {
     final newStatus = !_isAvailable;
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null || user.email == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString('user_email');
+    if (email == null) return;
 
     try {
       // Update registrations table
       await Supabase.instance.client
           .from('registrations')
           .update({'current_availability_status': newStatus ? 'available' : 'not-available'})
-          .eq('email', user.email!);
+          .eq('email', email);
 
       if (newStatus) {
         // Becoming available - insert start time
         _startTime = DateTime.now();
         await Supabase.instance.client.from('availability_logs').insert({
-          'user_email': user.email!,
+          'user_email': email,
           'date': DateTime.now().toIso8601String().split('T')[0],
           'availability_start_time': _startTime!.toIso8601String(),
         });
@@ -111,7 +114,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           await Supabase.instance.client
               .from('availability_logs')
               .update({'end_time': DateTime.now().toIso8601String()})
-              .eq('user_email', user.email!)
+              .eq('user_email', email)
               .eq('availability_start_time', _startTime!.toIso8601String());
         }
         _timer?.cancel();
@@ -154,7 +157,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              await Supabase.instance.client.auth.signOut();
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.remove('user_email');
               if (mounted) GoRouter.of(context).go('/login');
             },
           ),

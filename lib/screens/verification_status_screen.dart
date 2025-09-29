@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/footer.dart';
 
 class VerificationStatusScreen extends StatefulWidget {
@@ -24,8 +25,9 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
 
   Future<void> _loadStatus() async {
     try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('user_email');
+      if (email == null) {
         setState(() {
           _message = 'Please sign in to view your verification status.';
           _loading = false;
@@ -33,20 +35,17 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
         return;
       }
 
-      // Fetch registration by email (case-insensitive) and read the latest status
-      final emailLower = user.email?.toLowerCase();
+      // Fetch registration by email and read the latest status
+      final res = await Supabase.instance.client
+          .from('registrations')
+          .select('verification_status, rejection_reason')
+          .eq('email', email)
+          .order('created_at', ascending: false)
+          .limit(1);
       String? status;
-      if (emailLower != null) {
-        final res = await Supabase.instance.client
-            .from('registrations')
-            .select('verification_status, rejection_reason')
-            .ilike('email', emailLower)
-            .order('created_at', ascending: false)
-            .limit(1);
-        if (res is List && res.isNotEmpty && res.first is Map) {
-          status = (res.first as Map)['verification_status']?.toString();
-          _rejectionReason = (res.first as Map)['rejection_reason']?.toString();
-        }
+      if (res is List && res.isNotEmpty && res.first is Map) {
+        status = (res.first as Map)['verification_status']?.toString();
+        _rejectionReason = (res.first as Map)['rejection_reason']?.toString();
       }
 
       // Normalize and decide
@@ -99,7 +98,8 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
             icon: const Icon(Icons.logout, color: Colors.purple),
             tooltip: 'Logout',
             onPressed: () async {
-              await Supabase.instance.client.auth.signOut();
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.remove('user_email');
               if (mounted) GoRouter.of(context).go('/login');
             },
           ),

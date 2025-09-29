@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/footer.dart';
 
 class ContactPoliceScreen extends StatefulWidget {
@@ -25,8 +26,9 @@ class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
 
   Future<void> _fetchData() async {
     try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null || user.email == null) {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('user_email');
+      if (email == null) {
         setState(() => error = 'User not logged in');
         return;
       }
@@ -34,7 +36,7 @@ class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
       final reg = await Supabase.instance.client
           .from('registrations')
           .select('police_station')
-          .eq('email', user.email!)
+          .eq('email', email)
           .maybeSingle();
 
       if (reg == null) {

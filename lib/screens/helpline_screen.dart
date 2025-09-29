@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/footer.dart';
 
 class HelplineScreen extends StatefulWidget {
@@ -21,19 +22,17 @@ class _HelplineScreenState extends State<HelplineScreen> {
 
   Future<void> _loadVerificationStatus() async {
     try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) return;
-      final emailLower = user.email?.toLowerCase();
-      if (emailLower != null) {
-        final res = await Supabase.instance.client
-            .from('registrations')
-            .select('verification_status')
-            .ilike('email', emailLower)
-            .order('created_at', ascending: false)
-            .limit(1);
-        if (res is List && res.isNotEmpty && res.first is Map) {
-          _verificationStatus = (res.first as Map)['verification_status']?.toString();
-        }
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('user_email');
+      if (email == null) return;
+      final res = await Supabase.instance.client
+          .from('registrations')
+          .select('verification_status')
+          .eq('email', email)
+          .order('created_at', ascending: false)
+          .limit(1);
+      if (res is List && res.isNotEmpty && res.first is Map) {
+        _verificationStatus = (res.first as Map)['verification_status']?.toString();
       }
     } catch (e) {
       // ignore
