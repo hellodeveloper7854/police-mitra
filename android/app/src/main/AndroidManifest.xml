@@ -4,7 +4,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <application
-        android:label="पोलीस मित्र"
+        android:label="पोलीस मित्र ठाणे पोलीस"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
