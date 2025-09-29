@@ -1,9 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class ContactPoliceScreen extends StatelessWidget {
+class ContactPoliceScreen extends StatefulWidget {
   const ContactPoliceScreen({super.key});
+
+  @override
+  State<ContactPoliceScreen> createState() => _ContactPoliceScreenState();
+}
+
+class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
+  String? policeStation;
+  List<Map<String, dynamic>> contacts = [];
+  bool isLoading = true;
+  String? error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null || user.email == null) {
+        setState(() => error = 'User not logged in');
+        return;
+      }
+
+      final reg = await Supabase.instance.client
+          .from('registrations')
+          .select('police_station')
+          .eq('email', user.email!)
+          .maybeSingle();
+
+      if (reg == null) {
+        setState(() => error = 'User registration not found');
+        return;
+      }
+
+      final station = reg['police_station'] as String?;
+      if (station == null) {
+        setState(() => error = 'Police station not found');
+        return;
+      }
+
+      setState(() => policeStation = station);
+
+      final contactsData = await Supabase.instance.client
+          .from('station_contacts')
+          .select('*')
+          .eq('police_station', policeStation!);
+
+      setState(() => contacts = List<Map<String, dynamic>>.from(contactsData));
+    } catch (e) {
+      setState(() => error = e.toString());
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
 
   void _makeCall(String phoneNumber) async {
     final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
@@ -41,7 +98,7 @@ class ContactPoliceScreen extends StatelessWidget {
             Row(
               children: [
                 Image.asset(
-                  'assets/images/logo.png', 
+                  'assets/images/logo.png',
                   height: 60,
                   width: 60,
                 ),
@@ -69,7 +126,7 @@ class ContactPoliceScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 40),
-            
+
             // Title
             const Text(
               'Police Station',
@@ -88,38 +145,61 @@ class ContactPoliceScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 30),
-            
+
             // Station Name
-            const Text(
-              'Kalwa Police Station',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
+            if (isLoading)
+              const Center(child: CircularProgressIndicator())
+            else if (error != null)
+              Center(
+                child: Text(
+                  'Error: $error',
+                  style: const TextStyle(color: Colors.red),
+                ),
+              )
+            else
+              Text(
+                policeStation ?? 'Unknown Station',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
               ),
-            ),
             const SizedBox(height: 20),
-            
+
             // Police Officers List
             Expanded(
-              child: ListView(
-                children: [
-                  _buildOfficerCard(
-                    'Sr. PI Prakash Kambale',
-                    '+91 9538790876',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildOfficerCard(
-                    'Thane Amaldar - PSI Swapnil Patil',
-                    '+91 8987654321',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildOfficerCard(
-                    'Beat marshal - HC Nikhil Kamat',
-                    '+91 8812345678',
-                  ),
-                ],
-              ),
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : error != null
+                      ? Center(
+                          child: Text(
+                            'Error: $error',
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        )
+                      : contacts.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'Data is not existing',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: contacts.length,
+                              itemBuilder: (context, index) {
+                                final contact = contacts[index];
+                                return Column(
+                                  children: [
+                                    _buildOfficerCard(contact),
+                                    const SizedBox(height: 12),
+                                  ],
+                                );
+                              },
+                            ),
             ),
           ],
         ),
@@ -127,7 +207,11 @@ class ContactPoliceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOfficerCard(String name, String phone) {
+  Widget _buildOfficerCard(Map<String, dynamic> contact) {
+    final name = contact['name'] ?? 'Unknown';
+    final phone = contact['phone_number'] ?? '';
+    final role = contact['role'] ?? '';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -163,14 +247,14 @@ class ContactPoliceScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          
+
           // Officer Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
+                  '$role $name',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -188,7 +272,7 @@ class ContactPoliceScreen extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Call Button
           GestureDetector(
             onTap: () => _makeCall(phone),
