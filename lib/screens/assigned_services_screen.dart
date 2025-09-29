@@ -1,8 +1,86 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
 
-class AssignedServicesScreen extends StatelessWidget {
+class AssignedServicesScreen extends StatefulWidget {
   const AssignedServicesScreen({super.key});
+
+  @override
+  State<AssignedServicesScreen> createState() => _AssignedServicesScreenState();
+}
+
+class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
+  bool _isLoading = true;
+  String? _error;
+  List<Map<String, dynamic>> _todayServices = [];
+  List<Map<String, dynamic>> _upcomingServices = [];
+  List<Map<String, dynamic>> _completedServices = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAssignedServices();
+  }
+
+  Future<void> _fetchAssignedServices() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null || user.email == null) {
+        setState(() {
+          _error = 'User not authenticated';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final response = await Supabase.instance.client
+          .from('assigned_services')
+          .select('*')
+          .eq('user_email', user.email!)
+          .order('assigned_date', ascending: true);
+
+      final services = List<Map<String, dynamic>>.from(response);
+
+      // Categorize services based on date
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      _todayServices.clear();
+      _upcomingServices.clear();
+      _completedServices.clear();
+
+      for (final service in services) {
+        final dateString = service['assigned_date'] as String?;
+        if (dateString == null) continue;
+
+        final serviceDate = DateTime.parse(dateString);
+        final serviceDateOnly = DateTime(serviceDate.year, serviceDate.month, serviceDate.day);
+
+        if (serviceDateOnly.isAtSameMomentAs(today)) {
+          _todayServices.add(service);
+        } else if (serviceDateOnly.isAfter(today)) {
+          _upcomingServices.add(service);
+        } else {
+          _completedServices.add(service);
+        }
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Failed to load services: $e';
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,35 +109,15 @@ class AssignedServicesScreen extends StatelessWidget {
             Row(
               children: [
                 Image.asset(
-                  'assets/images/logo.png', 
+                  'assets/images/logo.png',
                   height: 60,
                   width: 60,
                 ),
                 const SizedBox(width: 12),
-                // const Column(
-                //   crossAxisAlignment: CrossAxisAlignment.start,
-                //   children: [
-                //     Text(
-                //       'भारतीय पुलिस',
-                //       style: TextStyle(
-                //         fontSize: 14,
-                //         fontWeight: FontWeight.w500,
-                //         color: Colors.black87,
-                //       ),
-                //     ),
-                //     Text(
-                //       'INDIAN POLICE',
-                //       style: TextStyle(
-                //         fontSize: 10,
-                //         color: Colors.black54,
-                //       ),
-                //     ),
-                //   ],
-                // ),
               ],
             ),
             const SizedBox(height: 40),
-            
+
             // Title
             RichText(
               text: const TextSpan(
@@ -84,62 +142,93 @@ class AssignedServicesScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 30),
-            
+
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Upcoming Events Section
-                    const Text(
-                      'Upcoming Events',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    _buildEventCard(
-                      'Ganesh Visarjan Bandobast - Masund Talav',
-                      '10/09/2025',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildEventCard(
-                      'Bakari Eid - Rabidi',
-                      '09/09/2025',
-                    ),
-                    const SizedBox(height: 30),
-                    
-                    // Old Event Section
-                    const Text(
-                      'Old Event',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    _buildEventCard(
-                      'Ganesh Visarjan Bandobast - Some Location',
-                      '02/09/2025',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildEventCard(
-                      'Ganesh Visarjan Bandobast - Some Location',
-                      '28/08/2025',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildEventCard(
-                      'Some Event - Some Location',
-                      '00/00/2025',
-                    ),
-                  ],
-                ),
-              ),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error != null
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                _error!,
+                                style: const TextStyle(color: Colors.red),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: _fetchAssignedServices,
+                                child: const Text('Retry'),
+                              ),
+                            ],
+                          ),
+                        )
+                      : SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Today's Services Section
+                              if (_todayServices.isNotEmpty) ...[
+                                const Text(
+                                  'Today\'s Services',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                ..._todayServices.map((service) => _buildServiceCard(service)),
+                                const SizedBox(height: 30),
+                              ],
+
+                              // Upcoming Services Section
+                              if (_upcomingServices.isNotEmpty) ...[
+                                const Text(
+                                  'Upcoming Services',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                ..._upcomingServices.map((service) => _buildServiceCard(service)),
+                                const SizedBox(height: 30),
+                              ],
+
+                              // Completed Services Section
+                              if (_completedServices.isNotEmpty) ...[
+                                const Text(
+                                  'Completed Services',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                ..._completedServices.map((service) => _buildServiceCard(service)),
+                              ],
+
+                              // No services message
+                              if (_todayServices.isEmpty && _upcomingServices.isEmpty && _completedServices.isEmpty)
+                                const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(40.0),
+                                    child: Text(
+                                      'No assigned services found',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
             ),
           ],
         ),
@@ -148,9 +237,16 @@ class AssignedServicesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEventCard(String title, String date) {
+  Widget _buildServiceCard(Map<String, dynamic> service) {
+    final dateString = service['assigned_date'] as String?;
+    if (dateString == null) return const SizedBox.shrink();
+
+    final serviceDate = DateTime.parse(dateString);
+    final formattedDate = DateFormat('dd/MM/yyyy').format(serviceDate);
+
     return Container(
       padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: const Color(0xFFF8F9FA),
         borderRadius: BorderRadius.circular(12),
@@ -158,7 +254,7 @@ class AssignedServicesScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Event Image/Icon
+          // Service Image/Icon
           Container(
             width: 50,
             height: 50,
@@ -169,7 +265,7 @@ class AssignedServicesScreen extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.asset(
-                'assets/images/event_image.png', // You can use an event image
+                'assets/images/event_image.png', // You can use a service image
                 height: 50,
                 width: 50,
                 fit: BoxFit.cover,
@@ -187,7 +283,7 @@ class AssignedServicesScreen extends StatelessWidget {
                       ),
                     ),
                     child: const Icon(
-                      Icons.event,
+                      Icons.assignment,
                       color: Colors.white,
                       size: 24,
                     ),
@@ -197,14 +293,14 @@ class AssignedServicesScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          
-          // Event Details
+
+          // Service Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  (service['service_name'] as String?) ?? 'Service',
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -213,12 +309,22 @@ class AssignedServicesScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  date,
+                  formattedDate,
                   style: const TextStyle(
                     fontSize: 12,
                     color: Colors.black54,
                   ),
                 ),
+                if (service['location'] != null && service['location'] is String) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    service['location'] as String,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
