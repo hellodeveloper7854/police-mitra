@@ -16,6 +16,8 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
   bool _isLoading = true;
   String? _error;
   List<Map<String, dynamic>> _availabilityLogs = [];
+  DateTime? _selectedDate;
+  List<Map<String, dynamic>> _filteredLogs = [];
 
   @override
   void initState() {
@@ -48,6 +50,7 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
           .order('created_at', ascending: false);
 
       _availabilityLogs = List<Map<String, dynamic>>.from(response);
+      _updateFilteredLogs();
 
       setState(() {
         _isLoading = false;
@@ -56,6 +59,30 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
       setState(() {
         _error = 'Failed to load availability logs: $e';
         _isLoading = false;
+      });
+    }
+  }
+
+  void _updateFilteredLogs() {
+    if (_selectedDate == null) {
+      _filteredLogs = _availabilityLogs.take(5).toList();
+    } else {
+      final selectedDateStr = DateFormat('yyyy-MM-dd').format(_selectedDate!);
+      _filteredLogs = _availabilityLogs.where((log) => log['date'] == selectedDateStr).toList();
+    }
+  }
+
+  Future<void> _selectDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        _updateFilteredLogs();
       });
     }
   }
@@ -121,6 +148,34 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
               ),
               const SizedBox(height: 30),
 
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _selectDate,
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
+                      child: Text(
+                        _selectedDate == null ? 'Select Date' : 'Selected: ${DateFormat('dd/MM/yyyy').format(_selectedDate!)}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                  if (_selectedDate != null) ...[
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _selectedDate = null;
+                          _updateFilteredLogs();
+                        });
+                      },
+                      icon: const Icon(Icons.clear),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 20),
+
               Expanded(
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
@@ -142,7 +197,7 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
                               ],
                             ),
                           )
-                        : _availabilityLogs.isEmpty
+                        : _filteredLogs.isEmpty
                             ? const Center(
                                 child: Padding(
                                   padding: EdgeInsets.all(40.0),
@@ -156,9 +211,9 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
                                 ),
                               )
                             : ListView.builder(
-                                itemCount: _availabilityLogs.length,
+                                itemCount: _filteredLogs.length,
                                 itemBuilder: (context, index) {
-                                  final log = _availabilityLogs[index];
+                                  final log = _filteredLogs[index];
                                   return _buildAvailabilityCard(log);
                                 },
                               ),
@@ -187,24 +242,35 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
       }
     }
 
+    DateTime? startTimeParsed;
     String formattedStartTime = 'N/A';
     if (startTimeString != null) {
       try {
-        final startTime = DateTime.parse(startTimeString);
-        formattedStartTime = DateFormat('HH:mm').format(startTime);
+        startTimeParsed = DateTime.parse(startTimeString);
+        formattedStartTime = DateFormat('HH:mm').format(startTimeParsed!);
       } catch (e) {
         formattedStartTime = startTimeString;
       }
     }
 
+    DateTime? endTimeParsed;
     String formattedEndTime = 'N/A';
     if (endTimeString != null) {
       try {
-        final endTime = DateTime.parse(endTimeString);
-        formattedEndTime = DateFormat('HH:mm').format(endTime);
+        endTimeParsed = DateTime.parse(endTimeString);
+        formattedEndTime = DateFormat('HH:mm').format(endTimeParsed!);
       } catch (e) {
         formattedEndTime = endTimeString;
       }
+    }
+
+    String durationText = 'N/A';
+    if (startTimeParsed != null && endTimeParsed != null) {
+      final duration = endTimeParsed.difference(startTimeParsed);
+      final hours = duration.inHours;
+      final minutes = duration.inMinutes % 60;
+      final seconds = duration.inSeconds % 60;
+      durationText = '${hours}h ${minutes}m ${seconds}s';
     }
 
     String formattedCreatedAt = 'N/A';
@@ -275,6 +341,24 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
               const SizedBox(width: 8),
               Text(
                 'End Time: $formattedEndTime',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.black54,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Icon(
+                Icons.timer,
+                color: Colors.blue,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Duration: $durationText',
                 style: const TextStyle(
                   fontSize: 14,
                   color: Colors.black54,
