@@ -2,6 +2,7 @@
 CREATE TABLE availability_logs (
     id SERIAL PRIMARY KEY,
     user_email VARCHAR(255) NOT NULL,
+    police_station VARCHAR(255),
     date DATE NOT NULL,
     availability_start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP,

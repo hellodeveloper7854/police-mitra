@@ -102,8 +102,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (newStatus) {
         // Becoming available - insert start time
         _startTime = DateTime.now();
+
+        // Fetch police_station from registrations
+        final regRes = await Supabase.instance.client
+            .from('registrations')
+            .select('police_station')
+            .eq('email', email)
+            .single();
+        final policeStation = regRes['police_station'];
+
         await Supabase.instance.client.from('availability_logs').insert({
           'user_email': email,
+          'police_station': policeStation,
           'date': DateTime.now().toIso8601String().split('T')[0],
           'availability_start_time': _startTime!.toIso8601String(),
         });
