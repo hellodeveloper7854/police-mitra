@@ -301,9 +301,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: () => context.push('/availability-status'),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                      child: const Text('Check Availability Status', style: TextStyle(color: Colors.white)),
+                      onPressed: _loading ? null : _save,
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
+                      child: const Text('Save Changes', style: TextStyle(color: Colors.white)),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -311,9 +311,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: _loading ? null : _save,
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
-                      child: const Text('Save Changes', style: TextStyle(color: Colors.white)),
+                      onPressed: () => context.push('/availability-status'),
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                      child: const Text(' Availability History', style: TextStyle(color: Colors.white)),
                     ),
                   )
                 ],
