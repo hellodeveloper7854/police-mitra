@@ -300,10 +300,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       print('DEBUG: Card navigation - going to /helpline');
                       context.push('/helpline');
                     }),
-                    // _buildCard('Community', Icons.groups, Colors.orange, () {
-                    //   print('DEBUG: Card navigation - going to /community');
-                    //   context.push('/community');
-                    // }),
+                    _buildCard('Community', 'assets/images/community.png', Colors.orange, () {
+                      print('DEBUG: Card navigation - going to /community');
+                      context.push('/community');
+                    }),
                   ],
                 ),
               ),
