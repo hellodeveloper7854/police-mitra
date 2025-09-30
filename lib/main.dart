@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
+import 'screens/forgot_password_screen.dart';
+import 'screens/reset_password_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/assigned_services_screen.dart';
 import 'screens/contact_police_screen.dart';
@@ -64,6 +66,18 @@ final GoRouter _router = GoRouter(
       path: '/signup',
       builder: (BuildContext context, GoRouterState state) {
         return const SignupScreen();
+      },
+    ),
+    GoRoute(
+      path: '/forgot-password',
+      builder: (BuildContext context, GoRouterState state) {
+        return const ForgotPasswordScreen();
+      },
+    ),
+    GoRoute(
+      path: '/reset-password',
+      builder: (BuildContext context, GoRouterState state) {
+        return const ResetPasswordScreen();
       },
     ),
     GoRoute(
