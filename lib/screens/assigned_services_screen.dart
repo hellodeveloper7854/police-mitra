@@ -136,6 +136,23 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
     }
   }
 
+  String _mapEnumToParticipation(String enumValue) {
+    switch (enumValue) {
+      case 'traffic_management':
+        return 'Traffic Management';
+      case 'school_awareness':
+        return 'School/College Awareness Programs';
+      case 'senior_citizens':
+        return 'Senior Citizen Visits';
+      case 'social_media_volunteer':
+        return 'Social Media Promotion';
+      case 'crowd_management':
+        return 'Festival Crowd Management';
+      default:
+        return enumValue;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -398,7 +415,7 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
                     const SizedBox(height: 4),
                     // Participation Area
                     Text(
-                      'Participation Area: ${(service['participation_area'] as String?) ?? 'N/A'}',
+                      'Participation Area: ${_mapEnumToParticipation((service['participation_area'] as String?) ?? 'N/A')}',
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.black54,
@@ -408,6 +425,15 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
                     // Date
                     Text(
                       'Date: $formattedDate',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    // Location
+                    Text(
+                      'Location: ${(service['location'] as String?) ?? 'N/A'}',
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.black54,
