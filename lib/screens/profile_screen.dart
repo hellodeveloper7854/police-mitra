@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../utils/crypto_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -84,15 +85,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadProfile() async {
     try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) {
-        setState(() {
-          _loading = false;
-        });
-        return;
-      }
-      final emailLower = user.email?.toLowerCase();
-      if (emailLower == null) {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('user_email');
+      if (email == null) {
         setState(() {
           _loading = false;
         });
@@ -102,7 +97,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final res = await Supabase.instance.client
           .from('registrations')
           .select()
-          .ilike('email', emailLower)
+          .ilike('email', email)
           .order('created_at', ascending: false)
           .limit(1);
 
@@ -143,9 +138,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _save() async {
     try {
       setState(() => _loading = true);
-      final user = Supabase.instance.client.auth.currentUser;
-      final emailLower = user?.email?.toLowerCase();
-      if (emailLower == null) return;
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('user_email');
+      if (email == null) return;
       final update = {
         'full_name': _fullName.text,
         'permanent_address': _permanentAddress.text,
@@ -167,7 +162,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await Supabase.instance.client
           .from('registrations')
           .update(update)
-          .ilike('email', emailLower);
+          .ilike('email', email);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated')),
@@ -378,7 +373,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
           value: value,
-          items: options.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+          isExpanded: true,
+          items: options.map((e) => DropdownMenuItem(value: e, child: Text(e, overflow: TextOverflow.ellipsis, maxLines: 1))).toList(),
           onChanged: (v) {
             if (v != null) onChanged(v);
           },
