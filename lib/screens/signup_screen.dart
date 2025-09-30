@@ -156,6 +156,8 @@ class _SignupScreenState extends State<SignupScreen> {
                     child: ClipOval(
                       child: Image.asset(
                         'assets/images/logo.png',
+                        height: 80,
+                        width: 80,
                         fit: BoxFit.cover,
                       ),
                     ),

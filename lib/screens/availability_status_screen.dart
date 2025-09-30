@@ -115,8 +115,8 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
                 children: [
                   Image.asset(
                     'assets/images/logo.png',
-                    height: 60,
-                    width: 60,
+                    height: 100,
+                    width: 100,
                   ),
                   const SizedBox(width: 12),
                 ],

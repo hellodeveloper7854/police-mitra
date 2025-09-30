@@ -18,7 +18,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            Image.asset('assets/images/logo.png', height: 30),
+            Image.asset('assets/images/logo.png', height: 80, width: 80),
             const SizedBox(width: 8),
             const Text(
               'पोलीस मित्र',

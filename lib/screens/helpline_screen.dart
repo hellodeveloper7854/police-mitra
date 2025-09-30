@@ -74,9 +74,9 @@ class _HelplineScreenState extends State<HelplineScreen> {
             Row(
               children: [
                 Image.asset(
-                  'assets/images/logo.png', 
-                  height: 60,
-                  width: 60,
+                  'assets/images/logo.png',
+                  height: 80,
+                  width: 80,
                 ),
                 const SizedBox(width: 12),
                 // const Column(

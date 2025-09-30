@@ -104,8 +104,8 @@ class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
                 children: [
                   Image.asset(
                     'assets/images/logo.png',
-                    height: 60,
-                    width: 60,
+                    height: 80,
+                    width: 80,
                   ),
                   const SizedBox(width: 12),
                   // const Column(

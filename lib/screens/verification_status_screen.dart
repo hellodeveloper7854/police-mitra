@@ -84,7 +84,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
         elevation: 0,
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Image.asset('assets/images/logo.png'),
+          child: Image.asset('assets/images/logo.png', height: 80, width: 80),
         ),
         title: const Text('Status', style: TextStyle(color: Colors.black)),
         actions: [
