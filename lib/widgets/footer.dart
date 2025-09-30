@@ -26,10 +26,14 @@ class _FooterWidgetState extends State<FooterWidget> {
         context.push('/contact-police');
         break;
       case 2:
+        print('DEBUG: Navigating to /helpline using context.push()');
+        context.push('/helpline');
+        break;
+      case 3:
         print('DEBUG: Navigating to /community using context.push()');
         context.push('/community');
         break;
-      case 3:
+      case 4:
         print('DEBUG: Navigating to /assigned-services using context.push()');
         context.push('/assigned-services');
         break;
@@ -48,6 +52,10 @@ class _FooterWidgetState extends State<FooterWidget> {
         BottomNavigationBarItem(
           icon: Icon(Icons.wifi_tethering),
           label: 'Police Station',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.phone),
+          label: 'Helpline',
         ),
         // BottomNavigationBarItem(
         //   icon: Icon(Icons.groups),
