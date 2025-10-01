@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FooterWidget extends StatefulWidget {
   const FooterWidget({super.key});
@@ -11,15 +13,44 @@ class FooterWidget extends StatefulWidget {
 class _FooterWidgetState extends State<FooterWidget> {
   int _selectedIndex = 0;
 
-  void _onItemTapped(int index) {
+  Future<void> _onItemTapped(int index) async {
     print('DEBUG: Bottom nav tapped - index: $index');
     setState(() {
       _selectedIndex = index;
     });
     switch (index) {
       case 0:
-        // Home - already on dashboard
-        print('DEBUG: Staying on dashboard (home)');
+        print('DEBUG: Home tapped - checking verification status');
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          final email = prefs.getString('user_email');
+
+          if (email == null) {
+            if (mounted) context.go('/login');
+            break;
+          }
+
+          final user = await Supabase.instance.client
+              .from('registrations')
+              .select('verification_status')
+              .eq('email', email)
+              .order('created_at', ascending: false)
+              .limit(1)
+              .maybeSingle();
+
+          if (!mounted) break;
+
+          final normalized = (user?['verification_status'] ?? '').toString().trim().toLowerCase();
+
+          if (normalized == 'verified' || normalized == 'approve' || normalized == 'approved') {
+            context.go('/dashboard');
+          } else {
+            context.go('/status');
+          }
+        } catch (e) {
+          print('ERROR: Home navigation failed - $e');
+          if (mounted) context.go('/login');
+        }
         break;
       case 1:
         print('DEBUG: Navigating to /contact-police using context.push()');
