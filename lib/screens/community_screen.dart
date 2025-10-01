@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/footer.dart';
 
 class CommunityScreen extends StatefulWidget {
@@ -11,9 +13,48 @@ class CommunityScreen extends StatefulWidget {
 
 class _CommunityScreenState extends State<CommunityScreen> {
 
+  Future<void> _onBackPressed() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('user_email');
+
+      if (email == null) {
+        if (mounted) context.go('/login');
+        return;
+      }
+
+      final user = await Supabase.instance.client
+          .from('registrations')
+          .select('verification_status')
+          .eq('email', email)
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      final normalized =
+          (user?['verification_status'] ?? '').toString().trim().toLowerCase();
+
+      if (normalized == 'verified' ||
+          normalized == 'approve' ||
+          normalized == 'approved') {
+        context.go('/dashboard');
+      } else {
+        context.go('/status');
+      }
+    } catch (e) {
+      print('ERROR: Back navigation failed - $e');
+      context.go('/login');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        await _onBackPressed();
+        return false; // Prevent default back
+      },
+      child: Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Row(
@@ -29,7 +70,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.push('/dashboard'),
+            onPressed: _onBackPressed,
           ),
         ],
         elevation: 0,
@@ -120,6 +161,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
         ),
       ),
       bottomNavigationBar: const FooterWidget(),
+    ),
     );
   }
 

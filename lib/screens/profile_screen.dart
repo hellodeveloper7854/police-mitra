@@ -234,7 +234,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        final normalized = (_verificationStatus ?? '').trim().toLowerCase();
+        if (normalized == 'verified' || normalized == 'approve' || normalized == 'approved') {
+          context.go('/dashboard');
+        } else {
+          context.go('/status');
+        }
+        return false; // Prevent default back
+      },
+      child: Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -319,6 +329,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
+    ),
     );
   }
 

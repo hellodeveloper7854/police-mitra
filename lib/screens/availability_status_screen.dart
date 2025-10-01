@@ -25,6 +25,40 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
     _fetchAvailabilityLogs();
   }
 
+  Future<void> _onBackPressed() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('user_email');
+
+      if (email == null) {
+        if (mounted) context.go('/login');
+        return;
+      }
+
+      final user = await Supabase.instance.client
+          .from('registrations')
+          .select('verification_status')
+          .eq('email', email)
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      final normalized =
+          (user?['verification_status'] ?? '').toString().trim().toLowerCase();
+
+      if (normalized == 'verified' ||
+          normalized == 'approve' ||
+          normalized == 'approved') {
+        context.go('/dashboard');
+      } else {
+        context.go('/status');
+      }
+    } catch (e) {
+      print('ERROR: Back navigation failed - $e');
+      context.go('/login');
+    }
+  }
+
   Future<void> _fetchAvailabilityLogs() async {
     try {
       setState(() {
@@ -89,14 +123,19 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        await _onBackPressed();
+        return false; // Prevent default back
+      },
+      child: Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.push('/profile'),
+          onPressed: _onBackPressed,
         ),
         title: const Text(
           'Availability Status',
@@ -223,6 +262,7 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
         ),
       ),
       bottomNavigationBar: const FooterWidget(),
+    ),
     );
   }
 
