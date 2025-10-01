@@ -126,8 +126,8 @@ class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person, color: Colors.black),
-            onPressed: () => context.push('/profile'),
+            icon: const Icon(Icons.settings, color: Colors.black),
+            onPressed: () => context.push('/settings'),
           ),
         ],
       ),
