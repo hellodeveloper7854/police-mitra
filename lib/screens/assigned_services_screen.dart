@@ -125,7 +125,7 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
           .from('assigned_services')
           .select('*')
           .eq('user_email', email)
-          .order('assigned_date', ascending: true);
+          .order('assigned_date', ascending: false);
 
       final services = List<Map<String, dynamic>>.from(response);
 
