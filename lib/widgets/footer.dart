@@ -3,21 +3,22 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class FooterWidget extends StatefulWidget {
+class FooterWidget extends StatelessWidget {
   const FooterWidget({super.key});
 
-  @override
-  State<FooterWidget> createState() => _FooterWidgetState();
-}
+  // Determine which tab should be active based on the current route
+  int _indexForLocation(String location) {
+    if (location.startsWith('/contact-police')) return 1;
+    if (location.startsWith('/helpline') ||
+        location.startsWith('/cyber-security') ||
+        location.startsWith('/other-helplines')) return 2;
+    // Default to Home (dashboard or any other routes not explicitly mapped)
+    return 0;
+  }
 
-class _FooterWidgetState extends State<FooterWidget> {
-  int _selectedIndex = 0;
-
-  Future<void> _onItemTapped(int index) async {
+  // Handle navigation when a tab is tapped
+  Future<void> _onItemTapped(BuildContext context, int index) async {
     print('DEBUG: Bottom nav tapped - index: $index');
-    setState(() {
-      _selectedIndex = index;
-    });
     switch (index) {
       case 0:
         print('DEBUG: Home tapped - checking verification status');
@@ -26,7 +27,7 @@ class _FooterWidgetState extends State<FooterWidget> {
           final email = prefs.getString('user_email');
 
           if (email == null) {
-            if (mounted) context.go('/login');
+            context.go('/login');
             break;
           }
 
@@ -38,18 +39,19 @@ class _FooterWidgetState extends State<FooterWidget> {
               .limit(1)
               .maybeSingle();
 
-          if (!mounted) break;
+          final normalized =
+              (user?['verification_status'] ?? '').toString().trim().toLowerCase();
 
-          final normalized = (user?['verification_status'] ?? '').toString().trim().toLowerCase();
-
-          if (normalized == 'verified' || normalized == 'approve' || normalized == 'approved') {
+          if (normalized == 'verified' ||
+              normalized == 'approve' ||
+              normalized == 'approved') {
             context.go('/dashboard');
           } else {
             context.go('/status');
           }
         } catch (e) {
           print('ERROR: Home navigation failed - $e');
-          if (mounted) context.go('/login');
+          context.go('/login');
         }
         break;
       case 1:
@@ -60,19 +62,14 @@ class _FooterWidgetState extends State<FooterWidget> {
         print('DEBUG: Navigating to /helpline using context.push()');
         context.push('/helpline');
         break;
-      case 3:
-        print('DEBUG: Navigating to /community using context.push()');
-        context.push('/community');
-        break;
-      case 4:
-        print('DEBUG: Navigating to /assigned-services using context.push()');
-        context.push('/assigned-services');
-        break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final location = GoRouterState.of(context).uri.toString();
+    final selectedIndex = _indexForLocation(location);
+
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
       items: const <BottomNavigationBarItem>[
@@ -97,10 +94,10 @@ class _FooterWidgetState extends State<FooterWidget> {
         //   label: 'My Duties',
         // ),
       ],
-      currentIndex: _selectedIndex,
+      currentIndex: selectedIndex,
       selectedItemColor: Colors.blue,
       unselectedItemColor: Colors.grey,
-      onTap: _onItemTapped,
+      onTap: (index) => _onItemTapped(context, index),
     );
   }
 }
