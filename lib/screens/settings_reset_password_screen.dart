@@ -86,22 +86,22 @@ class _SettingsResetPasswordScreenState extends State<SettingsResetPasswordScree
     final confirmPassword = _confirmPasswordController.text;
 
     if (oldPassword.isEmpty) {
-      _showSnackBar('Please enter your old password', Colors.orange);
+      _showDialog('Please enter your old password', Colors.orange);
       return;
     }
 
     if (newPassword.isEmpty) {
-      _showSnackBar('Please enter a new password', Colors.orange);
+      _showDialog('Please enter a new password', Colors.orange);
       return;
     }
 
     if (newPassword != confirmPassword) {
-      _showSnackBar('Passwords do not match', Colors.orange);
+      _showDialog('Passwords do not match', Colors.orange);
       return;
     }
 
     if (!(_hasMinLength && _hasUppercase && _hasLowercase && _hasSpecialChar)) {
-      _showSnackBar('Please meet all password requirements', Colors.orange);
+      _showDialog('Please meet all password requirements', Colors.orange);
       return;
     }
 
@@ -120,7 +120,7 @@ class _SettingsResetPasswordScreenState extends State<SettingsResetPasswordScree
 
       if (userRes['password'] != oldPassword) {
         if (mounted) {
-          _showSnackBar('Old password is incorrect', Colors.red);
+          _showDialog('Old password is incorrect', Colors.red);
         }
         return;
       }
@@ -132,37 +132,50 @@ class _SettingsResetPasswordScreenState extends State<SettingsResetPasswordScree
           .eq('email', email);
 
       if (mounted) {
-        _showSnackBar('Password reset successfully!', Colors.green);
+        _showDialog('Password reset successfully!', Colors.green);
         Future.delayed(const Duration(seconds: 1), () {
           if (mounted) context.go('/dashboard');
         });
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar('Error: $e', Colors.red);
+        _showDialog('Error: $e', Colors.red);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showSnackBar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              color == Colors.green ? Icons.check_circle : Icons.warning_amber_rounded,
-              color: Colors.white,
+  void _showDialog(String message, Color color) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(
+                color == Colors.green ? Icons.check_circle : Icons.warning_amber_rounded,
+                color: color,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  color == Colors.green ? 'Success' : 'Error',
+                  style: TextStyle(color: color, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
             ),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message)),
           ],
-        ),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
+        );
+      },
     );
   }
 
