@@ -194,10 +194,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     color: Colors.white,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        spreadRadius: 0,
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
+                        color: (isAvailable ? Colors.green : Colors.red).withOpacity(0.30),
+                        spreadRadius: 2,
+                        blurRadius: 24,
+                        offset: const Offset(0, 12),
+                      ),
+                      BoxShadow(
+                        color: (isAvailable ? Colors.green : Colors.red).withOpacity(0.15),
+                        spreadRadius: 10,
+                        blurRadius: 60,
+                        offset: const Offset(0, 24),
                       ),
                     ],
                   ),
@@ -268,18 +274,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              Text(
-                isAvailable
-                    ? 'Click on above button to Make Me available'
-                    : 'Click on above button to Make Me available',
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 14),
+              _buildStatusBanner(isAvailable),
+              const SizedBox(height: 32),
               // Grid of service cards
               Expanded(
                 child: GridView.count(
@@ -312,6 +309,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
       bottomNavigationBar: const FooterWidget(),
+    );
+  }
+
+  Widget _buildStatusBanner(bool isAvailable) {
+    final Color base = isAvailable ? Colors.green : Colors.red;
+    final List<Color> gradient = isAvailable
+        ? [Colors.green.shade500, Colors.green.shade700]
+        : [Colors.red.shade400, Colors.red.shade600];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: gradient),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: base.withOpacity(0.35),
+            blurRadius: 20,
+            spreadRadius: 2,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isAvailable ? Icons.check_circle : Icons.error_rounded,
+            color: Colors.white,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isAvailable ? 'You are Available' : 'You are Not Available',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Tap the status circle to ${isAvailable ? 'go Not Available' : 'become Available'}',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.95),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
