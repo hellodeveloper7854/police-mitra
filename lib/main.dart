@@ -17,6 +17,9 @@ import 'screens/verification_status_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/availability_status_screen.dart';
 import 'screens/auth_check_screen.dart';
+import 'screens/settings_screen.dart';
+import 'screens/feedback_screen.dart';
+import 'screens/settings_reset_password_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   //production account
@@ -144,6 +147,24 @@ final GoRouter _router = GoRouter(
       path: '/community',
       builder: (BuildContext context, GoRouterState state) {
         return const CommunityScreen();
+      },
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (BuildContext context, GoRouterState state) {
+        return const SettingsScreen();
+      },
+    ),
+    GoRoute(
+      path: '/feedback',
+      builder: (BuildContext context, GoRouterState state) {
+        return const FeedbackScreen();
+      },
+    ),
+    GoRoute(
+      path: '/settings-reset-password',
+      builder: (BuildContext context, GoRouterState state) {
+        return const SettingsResetPasswordScreen();
       },
     ),
   ],

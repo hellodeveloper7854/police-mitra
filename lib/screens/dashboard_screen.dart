@@ -161,8 +161,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () => context.push('/profile'),
+            icon: const Icon(Icons.settings),
+            onPressed: () => context.push('/settings'),
           ),
           IconButton(
             icon: const Icon(Icons.logout),
