@@ -87,6 +87,28 @@ class SettingsScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   _buildOptionCard(
                     context,
+                    'My Availability History',
+                    'View your availability status history',
+                    Icons.history,
+                    const LinearGradient(
+                      colors: [Color(0xFFff9a9e), Color(0xFFfecfef)],
+                    ),
+                    () => context.push('/availability-status'),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildOptionCard(
+                    context,
+                    'My Service History',
+                    'View your assigned services and history',
+                    Icons.assignment,
+                    const LinearGradient(
+                      colors: [Color(0xFFa8edea), Color(0xFFfed6e3)],
+                    ),
+                    () => context.push('/assigned-services'),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildOptionCard(
+                    context,
                     'Feedback',
                     'Share your experience with us',
                     Icons.star_outline,
@@ -106,17 +128,7 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     () => context.push('/settings-reset-password'),
                   ),
-                  const SizedBox(height: 16),
-                  _buildOptionCard(
-                    context,
-                    'Availability History',
-                    'View your availability status history',
-                    Icons.history,
-                    const LinearGradient(
-                      colors: [Color(0xFFff9a9e), Color(0xFFfecfef)],
-                    ),
-                    () => context.push('/availability-status'),
-                  ),
+                  
                 ],
               ),
             ),
