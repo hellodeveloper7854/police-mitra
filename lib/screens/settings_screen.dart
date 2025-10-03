@@ -106,6 +106,17 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     () => context.push('/settings-reset-password'),
                   ),
+                  const SizedBox(height: 16),
+                  _buildOptionCard(
+                    context,
+                    'Availability History',
+                    'View your availability status history',
+                    Icons.history,
+                    const LinearGradient(
+                      colors: [Color(0xFFff9a9e), Color(0xFFfecfef)],
+                    ),
+                    () => context.push('/availability-status'),
+                  ),
                 ],
               ),
             ),
