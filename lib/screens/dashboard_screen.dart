@@ -86,6 +86,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
 
+  Future<void> _showAvailabilityConfirmation() async {
+    final newStatus = !_isAvailable;
+    final actionText = newStatus ? 'Available' : 'Not Available';
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Status Change'),
+          content: Text('Are you sure you want to change your status to $actionText?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == true) {
+      await _toggleAvailability();
+    }
+  }
+
   Future<void> _toggleAvailability() async {
     final newStatus = !_isAvailable;
     final prefs = await SharedPreferences.getInstance();
@@ -185,7 +214,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 40),
               // Circular Status Indicator
               GestureDetector(
-                onTap: _toggleAvailability,
+                onTap: _showAvailabilityConfirmation,
                 child: Container(
                   width: 200,
                   height: 200,
