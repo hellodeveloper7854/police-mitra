@@ -24,16 +24,16 @@ import 'screens/settings_reset_password_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   //production account
-  await Supabase.initialize(
-    url: 'https://ifzbizgupmttuwlajwtb.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmemJpemd1cG10dHV3bGFqd3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNjIwNzQsImV4cCI6MjA3MzkzODA3NH0.BYauXuoJvTaKHMXRC3Al5TtNIoPPVMWYmNgaBr6nRg4',
-  );
+  // await Supabase.initialize(
+  //   url: 'https://ifzbizgupmttuwlajwtb.supabase.co',
+  //   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmemJpemd1cG10dHV3bGFqd3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNjIwNzQsImV4cCI6MjA3MzkzODA3NH0.BYauXuoJvTaKHMXRC3Al5TtNIoPPVMWYmNgaBr6nRg4',
+  // );
 
   //test account
-  // await Supabase.initialize(
-  //   url: 'https://ejzovolwzecvbijkxutf.supabase.co',
-  //   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqem92b2x3emVjdmJpamt4dXRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwMzY0OTgsImV4cCI6MjA3NDYxMjQ5OH0.aLHseWsfPpbJNf5w6xPZHZBwp05tINBtGooHawYQo4M',
-  // );
+  await Supabase.initialize(
+    url: 'https://ejzovolwzecvbijkxutf.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqem92b2x3emVjdmJpamt4dXRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwMzY0OTgsImV4cCI6MjA3NDYxMjQ5OH0.aLHseWsfPpbJNf5w6xPZHZBwp05tINBtGooHawYQo4M',
+  );
 
   // DEBUG: Check for existing session
   final session = Supabase.instance.client.auth.currentSession;
