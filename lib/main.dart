@@ -19,6 +19,7 @@ import 'screens/availability_status_screen.dart';
 import 'screens/auth_check_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/feedback_screen.dart';
+import 'screens/feedback_history_screen.dart';
 import 'screens/settings_reset_password_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -159,6 +160,12 @@ final GoRouter _router = GoRouter(
       path: '/feedback',
       builder: (BuildContext context, GoRouterState state) {
         return const FeedbackScreen();
+      },
+    ),
+    GoRoute(
+      path: '/feedback-history',
+      builder: (BuildContext context, GoRouterState state) {
+        return const FeedbackHistoryScreen();
       },
     ),
     GoRoute(

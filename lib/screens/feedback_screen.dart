@@ -144,6 +144,13 @@ class _FeedbackScreenState extends State<FeedbackScreen> with SingleTickerProvid
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
           onPressed: () => context.go('/settings'),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history, color: Colors.black87),
+            onPressed: () => context.go('/feedback-history'),
+            tooltip: 'View Feedback History',
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
