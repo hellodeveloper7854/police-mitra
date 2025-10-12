@@ -3,6 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../utils/crypto_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'dart:convert';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,6 +18,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _loading = true;
   Map<String, dynamic>? _record;
   String? _verificationStatus;
+  File? _selectedImage;
+  String? _profileImageUrl;
 
   // Controllers for editable fields
   final _fullName = TextEditingController();
@@ -122,6 +127,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _willingToWork = (_record!['willing_to_work'] ?? '').toString();
         _email.text = (_record!['email'] ?? '').toString();
         _identityNumbers.text = CryptoHelper.decryptAadhaarInIdentityString((_record!['identity_numbers'] ?? '').toString());
+        _profileImageUrl = _record!['profile_image_url']?.toString();
       }
     } catch (e) {
       // ignore but show a message
@@ -141,6 +147,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final prefs = await SharedPreferences.getInstance();
       final email = prefs.getString('user_email');
       if (email == null) return;
+
+      String? imageData = _profileImageUrl;
+      if (_selectedImage != null) {
+        try {
+          final bytes = await _selectedImage!.readAsBytes();
+          imageData = base64Encode(bytes);
+        } catch (e) {
+          // Image processing failed, continue without image
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Failed to process profile image, continuing without it.')),
+            );
+          }
+        }
+      }
+
       final update = {
         'full_name': _fullName.text,
         'permanent_address': _permanentAddress.text,
@@ -158,6 +180,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'available_time': _availableTime.text,
         'blood_group': _bloodGroup.text,
         'willing_to_work': _willingToWork,
+        'profile_image_url': imageData,
       };
       await Supabase.instance.client
           .from('registrations')
@@ -167,6 +190,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated')),
         );
+        // Update local
+        _profileImageUrl = imageData;
+        _selectedImage = null;
       }
     } catch (e) {
       if (mounted) {
@@ -211,6 +237,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
       default:
         return 'Traffic Management';
     }
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Image Source'),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final picked = await picker.pickImage(source: ImageSource.camera);
+              if (picked != null) {
+                setState(() => _selectedImage = File(picked.path));
+              }
+            },
+            child: const Text('Camera'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final picked = await picker.pickImage(source: ImageSource.gallery);
+              if (picked != null) {
+                setState(() => _selectedImage = File(picked.path));
+              }
+            },
+            child: const Text('Gallery'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -283,6 +341,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   _readonlyField('Email', _email.text),
                   _readonlyField('Identity Numbers', _identityNumbers.text),
+                  const SizedBox(height: 12),
+                  // Profile Image
+                  Center(
+                    child: Column(
+                      children: [
+                        Builder(
+                          builder: (context) {
+                            ImageProvider? imageProvider;
+                            if (_selectedImage != null) {
+                              imageProvider = FileImage(_selectedImage!);
+                            } else if (_profileImageUrl != null && _profileImageUrl!.isNotEmpty) {
+                              // Check if it's base64 data
+                              if (_profileImageUrl!.startsWith('http')) {
+                                imageProvider = NetworkImage(_profileImageUrl!);
+                              } else {
+                                try {
+                                  final bytes = base64Decode(_profileImageUrl!);
+                                  imageProvider = MemoryImage(bytes);
+                                } catch (e) {
+                                  // Invalid base64, show default
+                                }
+                              }
+                            }
+                            return Stack(
+                              children: [
+                                CircleAvatar(
+                                  radius: 50,
+                                  backgroundImage: imageProvider,
+                                  child: imageProvider == null ? const Icon(Icons.person, size: 50) : null,
+                                ),
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: GestureDetector(
+                                    onTap: _pickImage,
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        color: Colors.purple,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      padding: const EdgeInsets.all(8),
+                                      child: const Icon(
+                                        Icons.edit,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                        TextButton(
+                          onPressed: _pickImage,
+                          child: const Text('Edit Profile Image', style: TextStyle(color: Colors.purple)),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   _editField('Full Name', _fullName),
                   _editField('Permanent Address', _permanentAddress, maxLines: 2),

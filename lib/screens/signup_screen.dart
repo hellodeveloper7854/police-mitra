@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
+import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
 import '../utils/crypto_helper.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -196,6 +198,52 @@ class _SignupScreenState extends State<SignupScreen> {
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  // Profile Image
+                  Center(
+                    child: Column(
+                      children: [
+                        Stack(
+                          children: [
+                            if (_selectedImage != null)
+                              CircleAvatar(
+                                radius: 50,
+                                backgroundImage: FileImage(_selectedImage!),
+                              )
+                            else
+                              const CircleAvatar(
+                                radius: 50,
+                                child: Icon(Icons.person, size: 50),
+                              ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: _pickImage,
+                                child: Container(
+                                  decoration: const BoxDecoration(
+                                    color: Colors.purple,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  padding: const EdgeInsets.all(8),
+                                  child: const Icon(
+                                    Icons.edit,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: _pickImage,
+                          child: const Text('Upload Profile Image (Optional)', style: TextStyle(color: Colors.purple)),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 15),
@@ -642,12 +690,33 @@ class _SignupScreenState extends State<SignupScreen> {
                               return;
                             }
 
+                            String? imageData;
+                            if (_selectedImage != null) {
+                              try {
+                                final bytes = await _selectedImage!.readAsBytes();
+                                imageData = base64Encode(bytes);
+                              } catch (e) {
+                                // Image processing failed, continue without image
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Failed to process profile image, continuing without it.')),
+                                  );
+                                }
+                              }
+                            }
+
                             // Insert into user_credentials
                             await Supabase.instance.client.from('user_credentials').insert({
                               'email': email,
                               'password': password,
                               'created_at': DateTime.now().toIso8601String(),
                             });
+
+                            // Sign in to satisfy RLS policies
+                            // await Supabase.instance.client.auth.signInWithPassword(
+                            //   email: email,
+                            //   password: password,
+                            // );
 
                             // Insert into registrations
                             await Supabase.instance.client.from('registrations').insert({
@@ -674,7 +743,11 @@ class _SignupScreenState extends State<SignupScreen> {
                               'willing_to_work': _willingToWork,
                               'email': email,
                               'police_mitra_acceptance': true,
+                              'profile_image_url': imageData,
                             });
+
+                            // Sign out after signup to maintain original flow
+                            await Supabase.instance.client.auth.signOut();
 
                             if (mounted) context.go('/thank-you');
                           } catch (e) {
@@ -1277,6 +1350,38 @@ class _SignupScreenState extends State<SignupScreen> {
         }
         return null;
       },
+    );
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Image Source'),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final picked = await picker.pickImage(source: ImageSource.camera);
+              if (picked != null) {
+                setState(() => _selectedImage = File(picked.path));
+              }
+            },
+            child: const Text('Camera'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final picked = await picker.pickImage(source: ImageSource.gallery);
+              if (picked != null) {
+                setState(() => _selectedImage = File(picked.path));
+              }
+            },
+            child: const Text('Gallery'),
+          ),
+        ],
+      ),
     );
   }
 }
