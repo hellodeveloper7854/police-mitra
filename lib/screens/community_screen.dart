@@ -302,27 +302,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
             icon: const Icon(Icons.arrow_back, color: Colors.black),
             onPressed: _onBackPressed,
           ),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: const [
-                    Icon(Icons.search, color: Colors.grey, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'Search',
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
           actions: [
             Padding(
               padding: const EdgeInsets.only(right: 12.0),
