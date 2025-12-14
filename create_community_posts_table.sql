@@ -6,6 +6,7 @@ CREATE TABLE community_posts (
     title TEXT NOT NULL,
     content TEXT NOT NULL,
     hashtags TEXT[], -- Array of hashtags
+    status VARCHAR(50) DEFAULT 'pending', -- pending, approved, rejected
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

@@ -53,6 +53,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
       final postsResponse = await Supabase.instance.client
           .from('community_posts')
           .select('*')
+          .eq('status', 'approved')
           .order('created_at', ascending: false);
 
       final posts = List<Map<String, dynamic>>.from(postsResponse);
@@ -137,14 +138,27 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
         'title': title,
         'content': content,
         'hashtags': hashtags,
+        'status': 'pending',
       });
 
-      _fetchPosts(); // Refresh posts
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Post submitted successfully! It will be visible after approval.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+
+      // Don't refresh posts since pending posts aren't shown
     } catch (e) {
       print('Error creating post: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create post: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to create post: $e')),
+        );
+      }
     }
   }
 
