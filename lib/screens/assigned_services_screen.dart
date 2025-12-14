@@ -104,6 +104,42 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
     }
   }
 
+  Future<void> _updateParticipationStatus(String serviceId, String status, {String? reason}) async {
+    try {
+      final Map<String, dynamic> updateData = {'participation_status': status};
+      if (reason != null) {
+        updateData['non_participation_reason'] = reason;
+      } else if (status != 'declined') {
+        updateData['non_participation_reason'] = null;
+      }
+
+      await Supabase.instance.client
+          .from('assigned_services')
+          .update(updateData)
+          .eq('id', serviceId);
+
+      _fetchAssignedServices(); // Refresh data
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Participation status updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update participation status: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _fetchAssignedServices() async {
     try {
       setState(() {
@@ -185,6 +221,76 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
       default:
         return enumValue;
     }
+  }
+
+  String _formatParticipationStatus(String status) {
+    switch (status) {
+      case 'pending':
+        return 'Pending Response';
+      case 'confirmed':
+        return 'Can Participate';
+      case 'declined':
+        return 'Cannot Participate';
+      default:
+        return 'Pending Response';
+    }
+  }
+
+  
+  void _showReasonDialog(String serviceId) {
+    final reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Reason for Non-Participation'),
+          content: SizedBox(
+            width: double.infinity,
+            child: TextField(
+              controller: reasonController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                hintText: 'Please provide a reason why you cannot participate...',
+                border: OutlineInputBorder(),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.red),
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (reasonController.text.trim().isNotEmpty) {
+                  _updateParticipationStatus(
+                    serviceId,
+                    'declined',
+                    reason: reasonController.text.trim()
+                  );
+                  Navigator.of(context).pop();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please provide a reason'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -306,7 +412,7 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 16),
-                                  ..._upcomingServices.map((service) => _buildServiceCard(service)),
+                                  ..._upcomingServices.map((service) => _buildServiceCard(service, isUpcomingService: true)),
                                   const SizedBox(height: 30),
                                 ],
 
@@ -351,13 +457,153 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
     );
   }
 
-  Widget _buildServiceCard(Map<String, dynamic> service, {bool isTodayService = false}) {
+  
+  Widget _buildParticipationStatusWidget(Map<String, dynamic> service) {
+    final participationStatus = service['participation_status'] as String? ?? '';
+    final nonParticipationReason = service['non_participation_reason'] as String?;
+
+    // If no status selected, show dropdown
+    if (participationStatus.isEmpty) {
+      return Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade400),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: null,
+            hint: Text('Select participation status', style: TextStyle(fontSize: 12)),
+            isExpanded: true,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            items: [
+              DropdownMenuItem(
+                value: 'confirmed',
+                child: Text('I can participate', style: TextStyle(fontSize: 12)),
+              ),
+              DropdownMenuItem(
+                value: 'declined',
+                child: Text('I can\'t participate', style: TextStyle(fontSize: 12)),
+              ),
+            ],
+            onChanged: (value) {
+              if (value != null) {
+                if (value == 'declined') {
+                  _showReasonDialog(service['id'].toString());
+                } else {
+                  _updateParticipationStatus(service['id'].toString(), value);
+                }
+              }
+            },
+          ),
+        ),
+      );
+    }
+
+    // If status is selected, show non-editable status display
+    List<Widget> children = [
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: participationStatus == 'confirmed'
+              ? Colors.green.shade50
+              : Colors.red.shade50,
+          border: Border.all(
+            color: participationStatus == 'confirmed'
+                ? Colors.green.shade300
+                : Colors.red.shade300,
+          ),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              participationStatus == 'confirmed'
+                  ? Icons.check_circle
+                  : Icons.cancel,
+              size: 16,
+              color: participationStatus == 'confirmed'
+                  ? Colors.green.shade600
+                  : Colors.red.shade600,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                participationStatus == 'confirmed'
+                    ? 'I can participate'
+                    : 'I can\'t participate',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: participationStatus == 'confirmed'
+                      ? Colors.green.shade700
+                      : Colors.red.shade700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ];
+
+    // Add reason display if declined and reason is provided
+    if (participationStatus == 'declined' &&
+        nonParticipationReason != null &&
+        nonParticipationReason.isNotEmpty) {
+      children.add(const SizedBox(height: 8));
+      children.add(
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.red.shade50,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: Colors.red.shade200),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.info_outline, size: 16, color: Colors.red[700]),
+              const SizedBox(width: 4),
+              Text(
+                'Reason:',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red[700],
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  nonParticipationReason,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.red.shade700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: children,
+    );
+  }
+
+  Widget _buildServiceCard(Map<String, dynamic> service, {bool isTodayService = false, bool isUpcomingService = false}) {
     final dateString = service['assigned_date'] as String?;
     if (dateString == null) return const SizedBox.shrink();
 
     final serviceDate = DateTime.parse(dateString);
     final formattedDate = DateFormat('dd/MM/yyyy').format(serviceDate);
 
+  
     // Calculate duration if both start and end times exist
     String? durationText;
     if (service['start_time'] != null && service['end_time'] != null) {
@@ -479,6 +725,9 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
                         color: Colors.black54,
                       ),
                     ),
+
+                    // Participation Status for Today's and Upcoming Services
+                    
                   ],
                 ),
               ),
@@ -533,9 +782,14 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
               ],
             ],
           ),
+          if (isTodayService || isUpcomingService) ...[
+                      const SizedBox(height: 8),
+                      _buildParticipationStatusWidget(service),
+                    ],
         ],
       ),
     );
+    
   }
 
 }
