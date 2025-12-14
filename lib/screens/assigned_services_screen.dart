@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/footer.dart';
+import '../services/api_service.dart';
 
 class AssignedServicesScreen extends StatefulWidget {
   const AssignedServicesScreen({super.key});
@@ -35,16 +35,9 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
         return;
       }
 
-      final user = await Supabase.instance.client
-          .from('registrations')
-          .select('verification_status')
-          .eq('email', email)
-          .order('created_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
-
+      final userData = await ApiService.getUserRegistration(email);
       final normalized =
-          (user?['verification_status'] ?? '').toString().trim().toLowerCase();
+          (userData?['verification_status'] ?? '').toString().trim().toLowerCase();
 
       if (normalized == 'verified' ||
           normalized == 'approve' ||
@@ -65,10 +58,7 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
       final nowIST = DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30));
       final istTimeString = nowIST.toIso8601String();
 
-      await Supabase.instance.client
-          .from('assigned_services')
-          .update({'start_time': istTimeString})
-          .eq('id', serviceId);
+      await ApiService.updateServiceStatus(serviceId, {'start_time': istTimeString});
 
       _fetchAssignedServices(); // Refresh data
     } catch (e) {
@@ -86,13 +76,10 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
       final nowIST = DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30));
       final istTimeString = nowIST.toIso8601String();
 
-      await Supabase.instance.client
-          .from('assigned_services')
-          .update({
-            'end_time': istTimeString,
-            'status': 'completed'
-          })
-          .eq('id', serviceId);
+      await ApiService.updateServiceStatus(serviceId, {
+        'end_time': istTimeString,
+        'status': 'completed'
+      });
 
       _fetchAssignedServices(); // Refresh data
     } catch (e) {
@@ -121,13 +108,7 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
         return;
       }
 
-      final response = await Supabase.instance.client
-          .from('assigned_services')
-          .select('*')
-          .eq('user_email', email)
-          .order('assigned_date', ascending: false);
-
-      final services = List<Map<String, dynamic>>.from(response);
+      final services = await ApiService.getAssignedServices(email);
 
       // Categorize services based on date
       final now = DateTime.now();

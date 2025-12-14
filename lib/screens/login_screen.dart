@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -167,31 +167,25 @@ class _LoginScreenState extends State<LoginScreen> {
                             final email = _emailController.text.trim().toLowerCase();
                             final password = _passwordController.text;
 
-                            final userCred = await Supabase.instance.client
-                                .from('user_credentials')
-                                .select('email')
-                                .eq('email', email)
-                                .eq('password', password)
-                                .maybeSingle();
-
-                            if (userCred != null) {
-                              final prefs = await SharedPreferences.getInstance();
-                              await prefs.setString('user_email', email);
-
-                              final user = await Supabase.instance.client
-                                  .from('registrations')
-                                  .select('verification_status')
-                                  .eq('email', email)
-                                  .maybeSingle();
-                              if (mounted) {
-                                if (user != null &&
-                                    user['verification_status'] == 'verified') {
-                                  context.go('/dashboard');
-                                } else {
-                                  context.go('/status');
+                            final loginResult = await ApiService.login(email, password);
+                            print('Login result: $loginResult');
+                            print('DEBUG: Full loginResult structure: ${loginResult.toString()}');
+                            print('DEBUG: loginResult[\'data\']: ${loginResult?['data']}');
+ 
+                              if (loginResult != null) {
+                                final verificationStatus = loginResult['data']?['verification_status'];
+                                print('DEBUG: Extracted verification status from data: $verificationStatus');
+                                if (mounted) {
+                                  // Check for both 'verified' and 'approved' statuses
+                                  if (verificationStatus == 'verified' || verificationStatus == 'approved') {
+                                    print('Navigating to /dashboard');
+                                    context.go('/dashboard');
+                                  } else {
+                                    print('Navigating to /status');
+                                    context.go('/status');
+                                  }
                                 }
-                              }
-                            } else {
+                              } else {
                               if (mounted) {
                                 showDialog(
                                   context: context,

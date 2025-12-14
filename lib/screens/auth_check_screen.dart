@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
 
 class AuthCheckScreen extends StatefulWidget {
   const AuthCheckScreen({super.key});
@@ -22,6 +22,7 @@ class _AuthCheckScreenState extends State<AuthCheckScreen> {
   Future<void> _checkAuthStatus() async {
     final prefs = await SharedPreferences.getInstance();
     final email = prefs.getString('user_email');
+    final verificationStatus = prefs.getString('verification_status');
 
     if (email == null) {
       // No stored email, go to login
@@ -29,25 +30,13 @@ class _AuthCheckScreenState extends State<AuthCheckScreen> {
       return;
     }
 
-    // Check verification status
-    try {
-      final user = await Supabase.instance.client
-          .from('registrations')
-          .select('verification_status')
-          .eq('email', email)
-          .maybeSingle();
-
-      if (mounted) {
-        if (user != null && user['verification_status'] == 'verified') {
-          context.go('/dashboard');
-        } else {
-          context.go('/status');
-        }
+    // Check stored verification status
+    if (mounted) {
+      if (verificationStatus == 'verified') {
+        context.go('/dashboard');
+      } else {
+        context.go('/status');
       }
-    } catch (e) {
-      print('Error checking verification status: $e');
-      // On error, go to login
-      if (mounted) context.go('/login');
     }
   }
 

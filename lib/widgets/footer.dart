@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
 
 class FooterWidget extends StatelessWidget {
   const FooterWidget({super.key});
@@ -31,16 +31,9 @@ class FooterWidget extends StatelessWidget {
             break;
           }
 
-          final user = await Supabase.instance.client
-              .from('registrations')
-              .select('verification_status')
-              .eq('email', email)
-              .order('created_at', ascending: false)
-              .limit(1)
-              .maybeSingle();
-
+          final userData = await ApiService.getUserRegistration(email);
           final normalized =
-              (user?['verification_status'] ?? '').toString().trim().toLowerCase();
+              (userData?['verification_status'] ?? '').toString().trim().toLowerCase();
 
           if (normalized == 'verified' ||
               normalized == 'approve' ||

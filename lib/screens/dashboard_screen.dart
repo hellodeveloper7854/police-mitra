@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/footer.dart';
+import '../services/api_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -36,28 +36,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final email = prefs.getString('user_email');
       if (email == null) return;
 
-      final res = await Supabase.instance.client
-          .from('registrations')
-          .select('current_availability_status')
-          .eq('email', email)
-          .single();
-
-      if (res['current_availability_status'] == 'available') {
+      final userData = await ApiService.getUserRegistration(email);
+      if (userData != null && userData['current_availability_status'] == 'available') {
         // Fetch the latest availability log without end_time
-        final logRes = await Supabase.instance.client
-            .from('availability_logs')
-            .select('availability_start_time')
-            .eq('user_email', email)
-            .filter('end_time', 'is', null)
-            .order('availability_start_time', ascending: false)
-            .limit(1)
-            .single();
+        final logData = await ApiService.getLatestAvailabilityLog(email);
 
-        setState(() {
-          _isAvailable = true;
-          _startTime = DateTime.parse(logRes['availability_start_time']);
-        });
-        _startTimer();
+        if (logData != null) {
+          setState(() {
+            _isAvailable = true;
+            _startTime = DateTime.parse(logData['availability_start_time']);
+          });
+          _startTimer();
+        } else {
+          setState(() {
+            _isAvailable = false;
+            _elapsedTime = Duration.zero;
+          });
+          _timer?.cancel();
+        }
       } else {
         setState(() {
           _isAvailable = false;
@@ -123,38 +119,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     try {
       // Update registrations table
-      await Supabase.instance.client
-          .from('registrations')
-          .update({'current_availability_status': newStatus ? 'available' : 'not-available'})
-          .eq('email', email);
+      final statusString = newStatus ? 'available' : 'not-available';
+      await ApiService.updateAvailabilityStatus(email, statusString);
 
       if (newStatus) {
         // Becoming available - insert start time
         _startTime = DateTime.now();
 
         // Fetch police_station from registrations
-        final regRes = await Supabase.instance.client
-            .from('registrations')
-            .select('police_station')
-            .eq('email', email)
-            .single();
-        final policeStation = regRes['police_station'];
+        final userData = await ApiService.getUserRegistration(email);
+        final policeStation = userData?['police_station'];
 
-        await Supabase.instance.client.from('availability_logs').insert({
-          'user_email': email,
-          'police_station': policeStation,
-          'date': DateTime.now().toIso8601String().split('T')[0],
-          'availability_start_time': _startTime!.toIso8601String(),
-        });
+        if (policeStation != null) {
+          await ApiService.createAvailabilityLog({
+            'user_email': email,
+            'police_station': policeStation,
+            'date': DateTime.now().toIso8601String().split('T')[0],
+            'availability_start_time': _startTime!.toIso8601String(),
+          });
+        }
         _startTimer();
       } else {
         // Becoming unavailable - update end time
         if (_startTime != null) {
-          await Supabase.instance.client
-              .from('availability_logs')
-              .update({'end_time': DateTime.now().toIso8601String()})
-              .eq('user_email', email)
-              .eq('availability_start_time', _startTime!.toIso8601String());
+          await ApiService.updateAvailabilityLogEndTime(
+            email,
+            _startTime!.toIso8601String(),
+            DateTime.now().toIso8601String()
+          );
         }
         _timer?.cancel();
         _elapsedTime = Duration.zero;
@@ -196,8 +188,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.remove('user_email');
+              await ApiService.logout();
               if (mounted) GoRouter.of(context).go('/login');
             },
           ),

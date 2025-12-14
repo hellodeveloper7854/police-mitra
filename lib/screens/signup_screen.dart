@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../utils/crypto_helper.dart';
+import '../services/api_service.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -626,14 +628,10 @@ class _SignupScreenState extends State<SignupScreen> {
                             final email = _emailController.text.trim().toLowerCase();
                             final password = _passwordController.text;
 
-                            // Check if email already exists
-                            final existing = await Supabase.instance.client
-                                .from('user_credentials')
-                                .select('email')
-                                .eq('email', email)
-                                .maybeSingle();
-
-                            if (existing != null) {
+                            // Create user credentials first
+                            final credentialsSuccess = await _createUserCredentials(email, password);
+                            print(credentialsSuccess);
+                            if (!credentialsSuccess) {
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(content: Text('Email already registered. Please sign in instead.')),
@@ -642,15 +640,8 @@ class _SignupScreenState extends State<SignupScreen> {
                               return;
                             }
 
-                            // Insert into user_credentials
-                            await Supabase.instance.client.from('user_credentials').insert({
-                              'email': email,
-                              'password': password,
-                              'created_at': DateTime.now().toIso8601String(),
-                            });
-
-                            // Insert into registrations
-                            await Supabase.instance.client.from('registrations').insert({
+                            // Create registration
+                            final registrationData = {
                               'full_name': _fullNameController.text,
                               'permanent_address': _permanentAddressController.text,
                               'current_address': _currentAddressController.text,
@@ -674,9 +665,19 @@ class _SignupScreenState extends State<SignupScreen> {
                               'willing_to_work': _willingToWork,
                               'email': email,
                               'police_mitra_acceptance': true,
-                            });
+                            };
 
-                            if (mounted) context.go('/thank-you');
+                            final registrationSuccess = await ApiService.createRegistration(registrationData);
+
+                            if (registrationSuccess) {
+                              if (mounted) context.go('/thank-you');
+                            } else {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Registration failed. Please try again.')),
+                                );
+                              }
+                            }
                           } catch (e) {
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -739,6 +740,28 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
  
+  Future<bool> _createUserCredentials(String email, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiService.baseUrl}/user-credentials'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      );
+
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return data['success'] ?? false;
+      } else if (response.statusCode == 409) {
+        // Email already exists
+        return false;
+      }
+      return false;
+    } catch (e) {
+      print('Create user credentials error: $e');
+      return false;
+    }
+  }
+
   Future<bool> _showAcceptanceDialog() async {
     return await showDialog<bool>(
       context: context,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsResetPasswordScreen extends StatefulWidget {
@@ -107,35 +106,11 @@ class _SettingsResetPasswordScreenState extends State<SettingsResetPasswordScree
 
     setState(() => _isLoading = true);
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final email = prefs.getString('user_email');
-      if (email == null) return;
-
-      // Verify old password
-      final userRes = await Supabase.instance.client
-          .from('user_credentials')
-          .select('password')
-          .eq('email', email)
-          .single();
-
-      if (userRes['password'] != oldPassword) {
-        if (mounted) {
-          _showDialog('Old password is incorrect', Colors.red);
-        }
-        return;
-      }
-
-      // Update password
-      await Supabase.instance.client
-          .from('user_credentials')
-          .update({'password': newPassword})
-          .eq('email', email);
+      // Password reset functionality not implemented yet
+      await Future.delayed(const Duration(seconds: 2)); // Simulate API call
 
       if (mounted) {
-        _showDialog('Password reset successfully!', Colors.green);
-        Future.delayed(const Duration(seconds: 1), () {
-          if (mounted) context.go('/dashboard');
-        });
+        _showDialog('Password reset feature is not available yet. Please contact support.', Colors.orange);
       }
     } catch (e) {
       if (mounted) {

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/footer.dart';
+import '../services/api_service.dart';
 
 class ContactPoliceScreen extends StatefulWidget {
   const ContactPoliceScreen({super.key});
@@ -33,18 +33,13 @@ class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
         return;
       }
 
-      final reg = await Supabase.instance.client
-          .from('registrations')
-          .select('police_station')
-          .eq('email', email)
-          .maybeSingle();
-
-      if (reg == null) {
+      final userData = await ApiService.getUserRegistration(email);
+      if (userData == null) {
         setState(() => error = 'User registration not found');
         return;
       }
 
-      final station = reg['police_station'] as String?;
+      final station = userData['police_station'] as String?;
       if (station == null) {
         setState(() => error = 'Police station not found');
         return;
@@ -52,11 +47,7 @@ class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
 
       setState(() => policeStation = station);
 
-      final contactsData = await Supabase.instance.client
-          .from('station_contacts')
-          .select('*')
-          .eq('police_station', policeStation!);
-
+      final contactsData = await ApiService.getStationContacts(policeStation!);
       setState(() => contacts = List<Map<String, dynamic>>.from(contactsData));
     } catch (e) {
       setState(() => error = e.toString());
@@ -84,16 +75,9 @@ class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
         return;
       }
 
-      final user = await Supabase.instance.client
-          .from('registrations')
-          .select('verification_status')
-          .eq('email', email)
-          .order('created_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
-
+      final userData = await ApiService.getUserRegistration(email);
       final normalized =
-          (user?['verification_status'] ?? '').toString().trim().toLowerCase();
+          (userData?['verification_status'] ?? '').toString().trim().toLowerCase();
 
       if (normalized == 'verified' ||
           normalized == 'approve' ||

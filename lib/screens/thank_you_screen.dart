@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/footer.dart';
+import '../services/api_service.dart';
 
 class ThankYouScreen extends StatelessWidget {
   const ThankYouScreen({super.key});
@@ -22,7 +22,7 @@ class ThankYouScreen extends StatelessWidget {
             icon: const Icon(Icons.logout, color: Colors.purple),
             tooltip: 'Logout',
             onPressed: () async {
-              await Supabase.instance.client.auth.signOut();
+              await ApiService.logout();
               GoRouter.of(context).go('/login');
             },
           ),

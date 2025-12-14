@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/footer.dart';
+import '../services/api_service.dart';
 
 class VerificationStatusScreen extends StatefulWidget {
   const VerificationStatusScreen({super.key});
@@ -35,17 +35,12 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
         return;
       }
 
-      // Fetch registration by email and read the latest status
-      final res = await Supabase.instance.client
-          .from('registrations')
-          .select('verification_status, rejection_reason')
-          .eq('email', email)
-          .order('created_at', ascending: false)
-          .limit(1);
+      // Fetch registration by email
+      final userData = await ApiService.getUserRegistration(email);
       String? status;
-      if (res is List && res.isNotEmpty && res.first is Map) {
-        status = (res.first as Map)['verification_status']?.toString();
-        _rejectionReason = (res.first as Map)['rejection_reason']?.toString();
+      if (userData != null) {
+        status = userData['verification_status']?.toString();
+        _rejectionReason = userData['rejection_reason']?.toString();
       }
 
       // Normalize and decide
@@ -98,8 +93,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
             icon: const Icon(Icons.logout, color: Colors.purple),
             tooltip: 'Logout',
             onPressed: () async {
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.remove('user_email');
+              await ApiService.logout();
               if (mounted) GoRouter.of(context).go('/login');
             },
           ),

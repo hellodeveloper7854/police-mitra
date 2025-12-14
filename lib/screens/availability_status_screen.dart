@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/footer.dart';
+import '../services/api_service.dart';
 
 class AvailabilityStatusScreen extends StatefulWidget {
   const AvailabilityStatusScreen({super.key});
@@ -35,16 +35,9 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
         return;
       }
 
-      final user = await Supabase.instance.client
-          .from('registrations')
-          .select('verification_status')
-          .eq('email', email)
-          .order('created_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
-
+      final userData = await ApiService.getUserRegistration(email);
       final normalized =
-          (user?['verification_status'] ?? '').toString().trim().toLowerCase();
+          (userData?['verification_status'] ?? '').toString().trim().toLowerCase();
 
       if (normalized == 'verified' ||
           normalized == 'approve' ||
@@ -76,14 +69,7 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
         return;
       }
 
-      final response = await Supabase.instance.client
-          .from('availability_logs')
-          .select('*')
-          .eq('user_email', email)
-          .order('date', ascending: false)
-          .order('created_at', ascending: false);
-
-      _availabilityLogs = List<Map<String, dynamic>>.from(response);
+      _availabilityLogs = List<Map<String, dynamic>>.from(await ApiService.getAvailabilityLogs(email));
       _updateFilteredLogs();
 
       setState(() {

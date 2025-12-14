@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/footer.dart';
+import '../services/api_service.dart';
 
 class HelplineScreen extends StatefulWidget {
   const HelplineScreen({super.key});
@@ -25,15 +25,8 @@ class _HelplineScreenState extends State<HelplineScreen> {
       final prefs = await SharedPreferences.getInstance();
       final email = prefs.getString('user_email');
       if (email == null) return;
-      final res = await Supabase.instance.client
-          .from('registrations')
-          .select('verification_status')
-          .eq('email', email)
-          .order('created_at', ascending: false)
-          .limit(1);
-      if (res is List && res.isNotEmpty && res.first is Map) {
-        _verificationStatus = (res.first as Map)['verification_status']?.toString();
-      }
+      final userData = await ApiService.getUserRegistration(email);
+      _verificationStatus = userData?['verification_status']?.toString();
     } catch (e) {
       // ignore
     }

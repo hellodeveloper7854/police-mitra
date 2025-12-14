@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
 
 class FeedbackScreen extends StatefulWidget {
   const FeedbackScreen({super.key});
@@ -62,21 +62,20 @@ class _FeedbackScreenState extends State<FeedbackScreen> with SingleTickerProvid
       if (email == null) return;
 
       // Fetch police station from registrations table
-      final userReg = await Supabase.instance.client
-          .from('registrations')
-          .select('police_station')
-          .eq('email', email)
-          .single();
+      final userData = await ApiService.getUserRegistration(email);
+      final policeStation = userData?['police_station'] ?? 'Unknown';
 
-      final policeStation = userReg['police_station'] ?? 'Unknown';
-
-      await Supabase.instance.client.from('feedbacks').insert({
+      final success = await ApiService.createFeedback({
         'user_email': email,
         'police_station': policeStation,
         'rating': _rating,
         'comment': _commentController.text.trim(),
         'submitted_at': DateTime.now().toIso8601String(),
       });
+
+      if (!success) {
+        throw Exception('Failed to submit feedback');
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

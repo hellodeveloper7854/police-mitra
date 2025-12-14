@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../utils/crypto_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -94,15 +94,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return;
       }
 
-      final res = await Supabase.instance.client
-          .from('registrations')
-          .select()
-          .ilike('email', email)
-          .order('created_at', ascending: false)
-          .limit(1);
+      final userData = await ApiService.getUserRegistration(email);
 
-      if (res is List && res.isNotEmpty && res.first is Map<String, dynamic>) {
-        _record = res.first as Map<String, dynamic>;
+      if (userData != null) {
+        _record = userData;
         _verificationStatus = _record!['verification_status']?.toString();
         _fullName.text = (_record!['full_name'] ?? '').toString();
         _permanentAddress.text = (_record!['permanent_address'] ?? '').toString();
@@ -159,13 +154,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'blood_group': _bloodGroup.text,
         'willing_to_work': _willingToWork,
       };
-      await Supabase.instance.client
-          .from('registrations')
-          .update(update)
-          .ilike('email', email);
-      if (mounted) {
+
+      final success = await ApiService.updateRegistration(email, update);
+
+      if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated')),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update profile')),
         );
       }
     } catch (e) {

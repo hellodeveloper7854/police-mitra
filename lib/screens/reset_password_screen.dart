@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -232,30 +231,18 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
                             setState(() => _isLoading = true);
                             try {
-                              if (_email != null) {
-                                // Update password in user_credentials table
-                                await Supabase.instance.client
-                                    .from('user_credentials')
-                                    .update({'password': newPassword})
-                                    .eq('email', _email!);
+                              // Password reset functionality not implemented yet
+                              await Future.delayed(const Duration(seconds: 2)); // Simulate API call
 
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Password reset successfully')),
-                                  );
-                                  context.go('/login');
-                                }
-                              } else {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Invalid session. Please try again.')),
-                                  );
-                                }
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Password reset feature is not available yet. Please contact support.')),
+                                );
                               }
                             } catch (e) {
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Error resetting password: $e')),
+                                  SnackBar(content: Text('Error: $e')),
                                 );
                               }
                             } finally {
