@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../utils/crypto_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
+import '../constants/traffic_units.dart';
 import 'dart:io';
 import 'dart:convert';
 
@@ -28,6 +29,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _participationArea = '';
   final _occupation = TextEditingController();
   String _policeStation = '';
+  String _trafficUnit = '';
+  bool _trafficUnitWasInitiallyNull = false; // Track if traffic unit was initially null from database
   final _mobileNumber = TextEditingController();
   final _alternateMobileNumber = TextEditingController();
   final _dateOfBirth = TextEditingController();
@@ -115,6 +118,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _participationArea = (_record!['participation_area'] ?? '').toString();
         _occupation.text = (_record!['occupation'] ?? '').toString();
         _policeStation = (_record!['police_station'] ?? '').toString();
+
+        // Check if traffic unit was initially null from database
+        var dbTrafficUnit = _record!['traffic_unit'];
+        if (dbTrafficUnit == null || dbTrafficUnit.toString().trim().isEmpty) {
+          _trafficUnitWasInitiallyNull = true;
+          _trafficUnit = '';
+        } else {
+          _trafficUnit = dbTrafficUnit.toString().trim();
+        }
+
         _mobileNumber.text = CryptoHelper.decryptText((_record!['mobile_number'] ?? '').toString());
         _alternateMobileNumber.text = CryptoHelper.decryptText((_record!['alternate_mobile_number'] ?? '').toString());
         _dateOfBirth.text = (_record!['date_of_birth'] ?? '').toString();
@@ -170,6 +183,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'participation_area': _participationArea,
         'occupation': _occupation.text,
         'police_station': _policeStation,
+        'traffic_unit': _participationArea == 'traffic_management' ? (_trafficUnit.isEmpty ? null : _trafficUnit) : null,
         'mobile_number': CryptoHelper.encryptText(_mobileNumber.text),
         'alternate_mobile_number': _alternateMobileNumber.text.isNotEmpty ? CryptoHelper.encryptText(_alternateMobileNumber.text) : null,
         'date_of_birth': _dateOfBirth.text, // assume already ISO
@@ -411,9 +425,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     'Senior Citizen Visits',
                     'Social Media Promotion',
                     'Festival Crowd Management'
-                  ], (v) => setState(() => _participationArea = _mapParticipationToEnum(v))),
+                  ], (v) {
+                    setState(() {
+                      _participationArea = _mapParticipationToEnum(v);
+                      _trafficUnit = ''; // Reset traffic unit when participation changes
+                      _trafficUnitWasInitiallyNull = false; // Reset null tracking
+                    });
+                  }),
                   _editField('Occupation', _occupation),
-                  _dropdownField('Police Station', _policeStation, validOptions, (v) => setState(() => _policeStation = v)),
+                  _dropdownField('Police Station', _policeStation, validOptions, (v) {
+                    setState(() {
+                      _policeStation = v;
+                      _trafficUnit = ''; // Reset traffic unit when police station changes
+                      _trafficUnitWasInitiallyNull = false; // Reset null tracking
+                    });
+                  }),
+                  // Traffic Unit Field (only show for Traffic Management)
+                  if (_participationArea == 'traffic_management') ...[
+                    _buildTrafficUnitField(),
+                  ],
                   _editField('Mobile Number', _mobileNumber, keyboardType: TextInputType.phone),
                   _editField('Alternate Mobile Number', _alternateMobileNumber, keyboardType: TextInputType.phone),
                   _editField('Date of Birth (YYYY-MM-DD)', _dateOfBirth),
@@ -503,6 +533,119 @@ class _ProfileScreenState extends State<ProfileScreen> {
             focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.purple)),
             contentPadding: const EdgeInsets.all(12),
           ),
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+
+  Widget _buildTrafficUnitField() {
+    // Get available traffic units for the selected police station
+    List<String> availableTrafficUnits = [];
+    if (_policeStation.isNotEmpty && _policeStation != 'Select Police Station') {
+      availableTrafficUnits = TrafficUnitConstants.getTrafficUnitsForPoliceStation(_policeStation);
+    }
+
+    // Auto-select if there's only one traffic unit available AND user has no valid selection
+    // BUT only if traffic unit was not initially null from database
+    if (availableTrafficUnits.length == 1 && _trafficUnit.isEmpty && !_trafficUnitWasInitiallyNull) {
+      _trafficUnit = availableTrafficUnits.first;
+    }
+
+    // Ensure the current value is valid
+    if (!availableTrafficUnits.contains(_trafficUnit) && _trafficUnit.isNotEmpty) {
+      _trafficUnit = '';
+    }
+
+    // Determine if user has no valid traffic unit (empty string or not in available units)
+    bool hasNoValidTrafficUnit = _trafficUnit.isEmpty;
+
+    // If there's only one traffic unit AND user has a valid selection AND it was not initially null, show read-only
+    if (availableTrafficUnits.length == 1 && availableTrafficUnits.isNotEmpty && !hasNoValidTrafficUnit && !_trafficUnitWasInitiallyNull) {
+      String displayName = TrafficUnitConstants.getTrafficUnitDisplayName(availableTrafficUnits.first);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Traffic Unit', style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
+          TextFormField(
+            initialValue: displayName,
+            readOnly: true,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.black87,
+              fontWeight: FontWeight.w500,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Traffic Unit',
+              hintStyle: const TextStyle(color: Colors.grey),
+              border: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey.shade300)),
+              enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey.shade300)),
+              focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.purple)),
+              contentPadding: const EdgeInsets.all(12),
+              suffixIcon: const Icon(
+                Icons.lock,
+                color: Colors.grey,
+                size: 20,
+              ),
+              helperText: 'Auto-selected based on police station',
+              helperStyle: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 12,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+      );
+    }
+
+    // Show dropdown if multiple traffic units are available OR user has no valid selection OR was initially null
+    List<String> validOptions = availableTrafficUnits;
+
+    // Always show dropdown if traffic unit was initially null, regardless of available count
+    bool shouldShowDropdown = availableTrafficUnits.length > 1 ||
+                            hasNoValidTrafficUnit ||
+                            _trafficUnitWasInitiallyNull;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Traffic Unit', style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<String>(
+          value: (availableTrafficUnits.contains(_trafficUnit) && _trafficUnit.isNotEmpty) ? _trafficUnit : null,
+          isExpanded: true,
+          decoration: InputDecoration(
+            hintText: availableTrafficUnits.isEmpty
+                ? 'No traffic units available'
+                : (_trafficUnitWasInitiallyNull || hasNoValidTrafficUnit)
+                    ? 'Please select Traffic Unit'
+                    : 'Select Traffic Unit',
+            hintStyle: const TextStyle(color: Colors.grey),
+            border: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey.shade300)),
+            enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey.shade300)),
+            focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.purple)),
+            contentPadding: const EdgeInsets.all(12),
+          ),
+          items: validOptions.map((String value) {
+            String displayText = TrafficUnitConstants.getTrafficUnitDisplayName(value);
+
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(
+                displayText,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: const TextStyle(fontSize: 14),
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _trafficUnit = value ?? '';
+            });
+          },
         ),
         const SizedBox(height: 12),
       ],

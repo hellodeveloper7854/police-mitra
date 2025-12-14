@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import '../utils/crypto_helper.dart';
+import '../constants/traffic_units.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -20,6 +21,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final _currentAddressController = TextEditingController();
   String _participation = 'Select Participation Area';
   String _policeStation = 'Select Police Station';
+  String _trafficUnit = 'Select Traffic Unit';
   String _occupation = 'Select Occupation';
   final _mobileController = TextEditingController();
   final _alternateMobileController = TextEditingController();
@@ -55,6 +57,9 @@ class _SignupScreenState extends State<SignupScreen> {
     }
     if (!['Select Police Station', "KALWA POLICE STATION", "MUMBRA POLICE STATION", "NAUPADA POLICE STATION", "RABODI POLICE STATION", "SHILDOIGHAR POLICE STATION", "THANENAGAR POLICE STATION", "BHIWANDI POLICE STATION", "BHOIWADA POLICE STATION", "KONGAON POLICE STATION", "NARPOLI POLICE STATION", "NIZAMPURA POLICE STATION", "SHANTINAGAR POLICE STATION", "BAZARPETH POLICE STATION", "DOMBIWALI POLICE STATION", "KHADAKPADA POLICE STATION", "KOLSHEWADI POLICE STATION", "MAHATMA PHULE CHOUK POLICE STATION", "MANPADA POLICE STATION", "TILAKNAGAR POLICE STATION", "VISHNUNAGAR POLICE STATION", "AMBARNATH POLICE STATION", "BADALAPUR EAST POLICE STATION", "BADALAPUR WEST POLICE STATION", "CETRAL POLICE STATION", "HILLLINE POLICE STATION", "SHIVAJINAGAR POLICE STATION", "ULHASNAGAR POLICE STATION", "VITTHALWADI POLICE STATION", "CHITALSAR POLICE STATION", "KAPURBAWADI POLICE STATION", "KASARWADAWALI POLICE STATION", "KOPARI POLICE STATION", "SHRINAGAR POLICE STATION", "VARTAKNAGAR POLICE STATION", "WAGALE ESTATE POLICE STATION"].contains(_policeStation)) {
       _policeStation = 'Select Police Station';
+    }
+    if (!['Select Traffic Unit'].contains(_trafficUnit)) {
+      _trafficUnit = 'Select Traffic Unit';
     }
     if (!['Select Blood Group', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].contains(_bloodGroup)) {
       _bloodGroup = 'Select Blood Group';
@@ -307,6 +312,16 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(height: 5),
                   _buildPoliceStationDropdown(),
                   const SizedBox(height: 15),
+                  // Traffic Unit Field (only show for Traffic Management)
+                  if (_participation == 'Traffic Management') ...[
+                    const Text(
+                      'Traffic Unit *',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 5),
+                    _buildTrafficUnitDropdown(),
+                    const SizedBox(height: 15),
+                  ],
                   // Mobile and Alternate Mobile Row
                   LayoutBuilder(
                     builder: (context, constraints) {
@@ -660,6 +675,40 @@ class _SignupScreenState extends State<SignupScreen> {
                       onPressed: _isLoading ? null : () async {
                         bool accepted = await _showAcceptanceDialog();
                         if (!accepted) return;
+                        // Additional validation for traffic unit if participation is Traffic Management
+                        if (_participation == 'Traffic Management') {
+                          // Check if police station is selected
+                          if (_policeStation == 'Select Police Station' || _policeStation.isEmpty) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Please select a police station for Traffic Management participation.')),
+                              );
+                            }
+                            return;
+                          }
+
+                          // Check if traffic unit is available
+                          List<String> availableUnits = TrafficUnitConstants.getTrafficUnitsForPoliceStation(_policeStation);
+                          if (availableUnits.isEmpty) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('No traffic units available for the selected police station.')),
+                              );
+                            }
+                            return;
+                          }
+
+                          // If multiple units available, ensure one is selected
+                          if (availableUnits.length > 1 && (_trafficUnit == 'Select Traffic Unit' || _trafficUnit.isEmpty)) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Please select a traffic unit for Traffic Management participation.')),
+                              );
+                            }
+                            return;
+                          }
+                        }
+
                         if (_formKey.currentState!.validate()) {
                           if (!(_hasMinLength && _hasUppercase && _hasLowercase && _hasSpecialChar)) {
                             if (mounted) {
@@ -726,6 +775,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               'participation_area': _mapParticipationToEnum(_participation),
                               'occupation': _occupation,
                               'police_station': _policeStation,
+                              'traffic_unit': _participation == 'Traffic Management' ? (_trafficUnit == 'Select Traffic Unit' ? null : _trafficUnit) : null,
                               'mobile_number': CryptoHelper.encryptText(_mobileController.text),
                               'alternate_mobile_number': _alternateMobileController.text.isNotEmpty ? CryptoHelper.encryptText(_alternateMobileController.text) : null,
                               'date_of_birth': _toIsoDate(_dobController.text),
@@ -1077,6 +1127,7 @@ class _SignupScreenState extends State<SignupScreen> {
       onChanged: (value) {
         setState(() {
           _participation = value!;
+          _trafficUnit = 'Select Traffic Unit'; // Reset traffic unit when participation changes
         });
       },
       validator: (value) {
@@ -1205,6 +1256,7 @@ class _SignupScreenState extends State<SignupScreen> {
       onChanged: (value) {
         setState(() {
           _policeStation = value!;
+          _trafficUnit = 'Select Traffic Unit'; // Reset traffic unit when police station changes
         });
       },
       validator: (value) {
@@ -1347,6 +1399,121 @@ class _SignupScreenState extends State<SignupScreen> {
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Please select a time';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildTrafficUnitDropdown() {
+    // Get available traffic units for the selected police station
+    List<String> availableTrafficUnits = [];
+    if (_policeStation != 'Select Police Station' && _policeStation.isNotEmpty) {
+      availableTrafficUnits = TrafficUnitConstants.getTrafficUnitsForPoliceStation(_policeStation);
+    }
+
+    // Auto-select if there's only one traffic unit available
+    if (availableTrafficUnits.length == 1 && _trafficUnit == 'Select Traffic Unit') {
+      _trafficUnit = availableTrafficUnits.first;
+    }
+
+    // Ensure the current value is valid
+    if (!availableTrafficUnits.contains(_trafficUnit) && _trafficUnit != 'Select Traffic Unit') {
+      _trafficUnit = availableTrafficUnits.length == 1 ? availableTrafficUnits.first : 'Select Traffic Unit';
+    }
+
+    // If there's only one traffic unit, show a read-only field
+    if (availableTrafficUnits.length == 1 && availableTrafficUnits.isNotEmpty) {
+      String displayName = TrafficUnitConstants.getTrafficUnitDisplayName(availableTrafficUnits.first);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextFormField(
+            initialValue: displayName,
+            readOnly: true,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.black87,
+              fontWeight: FontWeight.w500,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Traffic Unit',
+              hintStyle: const TextStyle(color: Colors.grey),
+              border: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.purple),
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              suffixIcon: const Icon(
+                Icons.lock,
+                color: Colors.grey,
+                size: 20,
+              ),
+              helperText: 'Auto-selected based on police station',
+              helperStyle: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Show dropdown if multiple traffic units are available
+    List<String> validOptions = ['Select Traffic Unit'];
+    validOptions.addAll(availableTrafficUnits);
+
+    return DropdownButtonFormField<String>(
+      value: _trafficUnit,
+      isExpanded: true,
+      decoration: InputDecoration(
+        hintText: 'Select Traffic Unit',
+        hintStyle: const TextStyle(color: Colors.grey),
+        border: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.purple),
+        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      ),
+      items: validOptions.map((String value) {
+        String displayText = value == 'Select Traffic Unit'
+            ? value
+            : TrafficUnitConstants.getTrafficUnitDisplayName(value);
+
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(
+            displayText,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: const TextStyle(fontSize: 14),
+          ),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _trafficUnit = value!;
+        });
+      },
+      validator: (value) {
+        if (_participation == 'Traffic Management') {
+          if (availableTrafficUnits.isEmpty) {
+            return 'No traffic units available for selected police station';
+          }
+          if (availableTrafficUnits.length > 1 && (value == null || value == 'Select Traffic Unit')) {
+            return 'Please select a traffic unit';
+          }
         }
         return null;
       },
