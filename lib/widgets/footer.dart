@@ -9,9 +9,10 @@ class FooterWidget extends StatelessWidget {
   // Determine which tab should be active based on the current route
   int _indexForLocation(String location) {
     if (location.startsWith('/contact-police')) return 1;
+    if (location.startsWith('/community')) return 2;
     if (location.startsWith('/helpline') ||
         location.startsWith('/cyber-security') ||
-        location.startsWith('/other-helplines')) return 2;
+        location.startsWith('/other-helplines')) return 3;
     // Default to Home (dashboard or any other routes not explicitly mapped)
     return 0;
   }
@@ -59,6 +60,10 @@ class FooterWidget extends StatelessWidget {
         context.push('/contact-police');
         break;
       case 2:
+        print('DEBUG: Navigating to /community using context.push()');
+        context.push('/community');
+        break;
+      case 3:
         print('DEBUG: Navigating to /helpline using context.push()');
         context.push('/helpline');
         break;
@@ -82,17 +87,13 @@ class FooterWidget extends StatelessWidget {
           label: 'Police Station',
         ),
         BottomNavigationBarItem(
+          icon: Icon(Icons.groups),
+          label: 'Community',
+        ),
+        BottomNavigationBarItem(
           icon: Icon(Icons.phone),
           label: 'Helpline',
         ),
-        // BottomNavigationBarItem(
-        //   icon: Icon(Icons.groups),
-        //   label: 'Community',
-        // ),
-        // BottomNavigationBarItem(
-        //   icon: Icon(Icons.assignment),
-        //   label: 'My Duties',
-        // ),
       ],
       currentIndex: selectedIndex,
       selectedItemColor: Colors.blue,
