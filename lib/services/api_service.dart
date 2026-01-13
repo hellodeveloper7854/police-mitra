@@ -387,27 +387,37 @@ class ApiService {
   // Availability logs methods
   static Future<List<dynamic>> getAvailabilityLogs(String email) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/availability-logs?email=$email'));
-      print('DEBUG getAvailabilityLogs response: ${response.body}');
+      final response = await http.get(Uri.parse('$baseUrl/availability-logs-mobile?email=$email'));
+      print('DEBUG getAvailabilityLogs response: ${response.statusCode}');
 
       if (response.statusCode == 200) {
-        // Parse response body directly as a list
-        final List<dynamic> dataList = json.decode(response.body);
-        print('DEBUG getAvailabilityLogs: Response is a list with ${dataList.length} items');
+        // Parse response body as a Map first
+        final data = jsonDecode(response.body);
+        print('DEBUG getAvailabilityLogs: Response body: ${response.body}');
 
-        // Filter by email if needed
-        if (email.isNotEmpty) {
-          final filteredList = dataList.where((item) {
-            if (item is Map<String, dynamic>) {
-              final userEmail = item['user_email']?.toString().toLowerCase();
-              return userEmail == email.toLowerCase();
-            }
-            return false;
-          }).toList();
-          return filteredList;
+        // Check if response has success and data fields
+        if (data is Map<String, dynamic> && data['success'] == true) {
+          final List<dynamic> dataList = data['data'] ?? [];
+          print('DEBUG getAvailabilityLogs: Response is a map with ${dataList.length} items');
+
+          // Filter by email if needed
+          if (email.isNotEmpty) {
+            final filteredList = dataList.where((item) {
+              if (item is Map<String, dynamic>) {
+                final userEmail = item['user_email']?.toString().toLowerCase();
+                return userEmail == email.toLowerCase();
+              }
+              return false;
+            }).toList();
+            return filteredList;
+          }
+
+          return dataList;
+        } else if (data is List) {
+          // Fallback: if response is directly a list
+          print('DEBUG getAvailabilityLogs: Response is a direct list with ${data.length} items');
+          return data;
         }
-
-        return dataList;
       }
       return [];
     } catch (e) {
