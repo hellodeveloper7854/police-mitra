@@ -11,7 +11,9 @@ class FooterWidget extends StatelessWidget {
     if (location.startsWith('/contact-police')) return 1;
     if (location.startsWith('/helpline') ||
         location.startsWith('/cyber-security') ||
-        location.startsWith('/other-helplines')) return 2;
+        location.startsWith('/other-helplines')) {
+      return 2;
+    }
     // Default to Home (dashboard or any other routes not explicitly mapped)
     return 0;
   }

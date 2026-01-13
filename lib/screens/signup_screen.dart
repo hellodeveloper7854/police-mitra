@@ -660,7 +660,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               'gender': _gender,
                               'qualification': _qualificationController.text,
                               'ngo_affiliation': _ngoController.text.isNotEmpty ? _ngoController.text : null,
-                              'available_time': '${_selectedDay} ${_timeController.text}',
+                              'available_time': '$_selectedDay ${_timeController.text}',
                               'blood_group': _bloodGroup,
                               'willing_to_work': _willingToWork,
                               'email': email,
@@ -892,7 +892,7 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     return DropdownButtonFormField<String>(
-      value: _gender,
+      initialValue: _gender,
       isExpanded: true,
       decoration: InputDecoration(
         hintText: 'Select Gender',
@@ -941,7 +941,7 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     return DropdownButtonFormField<String>(
-      value: _occupation,
+      initialValue: _occupation,
       isExpanded: true,
       decoration: InputDecoration(
         hintText: 'Select Occupation',
@@ -997,7 +997,7 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     return DropdownButtonFormField<String>(
-      value: _participation,
+      initialValue: _participation,
       isExpanded: true,
       decoration: InputDecoration(
         hintText: 'Select Participation Option',
@@ -1046,7 +1046,7 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     return DropdownButtonFormField<String>(
-      value: _willingToWork,
+      initialValue: _willingToWork,
       isExpanded: true,
       decoration: InputDecoration(
         hintText: 'Are you willing to work as Police Mitra/Volunteer?',
@@ -1125,7 +1125,7 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     return DropdownButtonFormField<String>(
-      value: _policeStation,
+      initialValue: _policeStation,
       isExpanded: true,
       decoration: InputDecoration(
         hintText: 'Select Near Police Station',
@@ -1174,7 +1174,7 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     return DropdownButtonFormField<String>(
-      value: _bloodGroup,
+      initialValue: _bloodGroup,
       isExpanded: true,
       decoration: InputDecoration(
         hintText: 'Select Blood Group',
@@ -1223,7 +1223,7 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     return DropdownButtonFormField<String>(
-      value: _selectedDay,
+      initialValue: _selectedDay,
       isExpanded: true,
       decoration: InputDecoration(
         hintText: 'Select Day',

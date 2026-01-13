@@ -15,9 +15,9 @@ class AssignedServicesScreen extends StatefulWidget {
 class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
   bool _isLoading = true;
   String? _error;
-  List<Map<String, dynamic>> _todayServices = [];
-  List<Map<String, dynamic>> _upcomingServices = [];
-  List<Map<String, dynamic>> _completedServices = [];
+  final List<Map<String, dynamic>> _todayServices = [];
+  final List<Map<String, dynamic>> _upcomingServices = [];
+  final List<Map<String, dynamic>> _completedServices = [];
 
   @override
   void initState() {

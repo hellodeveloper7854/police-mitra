@@ -49,8 +49,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
       if (normalized == 'verified' || normalized == 'approve' || normalized == 'approved') {
         _message = 'Your account has been verified. App is in development.';
       } else if (normalized == 'rejected') {
-        _message = 'Your application has been rejected.' +
-            (_rejectionReason != null && _rejectionReason!.isNotEmpty ? ' Reason: $_rejectionReason' : '');
+        _message = 'Your application has been rejected.${_rejectionReason != null && _rejectionReason!.isNotEmpty ? ' Reason: $_rejectionReason' : ''}';
       } else {
         _message = status == null
             ? 'We could not find your registration record. If you just signed up, please wait a moment and try again.'
@@ -152,7 +151,7 @@ class _VerificationStatusScreenState extends State<VerificationStatusScreen> {
                 width: 100,
                 height: 100,
                 padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
                 ),

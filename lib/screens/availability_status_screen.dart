@@ -273,7 +273,7 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
     if (startTimeString != null) {
       try {
         startTimeParsed = DateTime.parse(startTimeString);
-        formattedStartTime = DateFormat('HH:mm').format(startTimeParsed!);
+        formattedStartTime = DateFormat('HH:mm').format(startTimeParsed);
       } catch (e) {
         formattedStartTime = startTimeString;
       }
@@ -284,7 +284,7 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
     if (endTimeString != null) {
       try {
         endTimeParsed = DateTime.parse(endTimeString);
-        formattedEndTime = DateFormat('HH:mm').format(endTimeParsed!);
+        formattedEndTime = DateFormat('HH:mm').format(endTimeParsed);
       } catch (e) {
         formattedEndTime = endTimeString;
       }
