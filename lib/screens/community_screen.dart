@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../widgets/footer.dart';
 
 class CommunityScreen extends StatefulWidget {
@@ -117,7 +119,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     }
   }
 
-  Future<void> _createPost(String title, String content, List<String> hashtags) async {
+  Future<void> _createPost(String title, String content, List<String> hashtags, File? imageFile) async {
     if (_currentUserEmail == null) return;
 
     try {
@@ -129,12 +131,24 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
 
       final userName = userResponse?['full_name'] ?? 'Anonymous';
 
+      String? imageUrl;
+      if (imageFile != null) {
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}_${_currentUserEmail}';
+        final path = 'community_images/$fileName';
+
+        await Supabase.instance.client.storage.from('community-images').upload(path, imageFile);
+
+        final response = Supabase.instance.client.storage.from('community-images').getPublicUrl(path);
+        imageUrl = response;
+      }
+
       await Supabase.instance.client.from('community_posts').insert({
         'user_email': _currentUserEmail,
         'user_name': userName,
         'title': title,
         'content': content,
         'hashtags': hashtags,
+        'image_url': imageUrl,
         'status': 'pending',
       });
 
@@ -211,76 +225,161 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     final titleController = TextEditingController();
     final contentController = TextEditingController();
     final hashtagsController = TextEditingController();
+    File? selectedImage;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Create New Post'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Title',
-                    border: OutlineInputBorder(),
-                  ),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Create New Post'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: titleController,
+                      decoration: const InputDecoration(
+                        labelText: 'Title',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: contentController,
+                      maxLines: 5,
+                      decoration: const InputDecoration(
+                        labelText: 'Content',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: hashtagsController,
+                      decoration: const InputDecoration(
+                        labelText: 'Hashtags (comma separated)',
+                        hintText: 'e.g., parenting, safety, tips',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: () async {
+                        final picker = ImagePicker();
+                        final pickedFile = await picker.pickImage(
+                          source: ImageSource.gallery,
+                          maxWidth: 1920,
+                          maxHeight: 1920,
+                          imageQuality: 85,
+                        );
+                        if (pickedFile != null) {
+                          setDialogState(() {
+                            selectedImage = File(pickedFile.path);
+                          });
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        height: selectedImage != null ? 200 : 60,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade400),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: selectedImage != null
+                            ? Stack(
+                                children: [
+                                  Positioned.fill(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.file(
+                                        selectedImage!,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setDialogState(() {
+                                          selectedImage = null;
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.black54,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.close,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.add_photo_alternate_outlined,
+                                    size: 30,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Add Image',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: contentController,
-                  maxLines: 5,
-                  decoration: const InputDecoration(
-                    labelText: 'Content',
-                    border: OutlineInputBorder(),
-                  ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: hashtagsController,
-                  decoration: const InputDecoration(
-                    labelText: 'Hashtags (comma separated)',
-                    hintText: 'e.g., parenting, safety, tips',
-                    border: OutlineInputBorder(),
+                ElevatedButton(
+                  onPressed: () {
+                    final title = titleController.text.trim();
+                    final content = contentController.text.trim();
+                    final hashtagsText = hashtagsController.text.trim();
+
+                    if (title.isEmpty || content.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please fill in title and content')),
+                      );
+                      return;
+                    }
+
+                    final hashtags = hashtagsText.isEmpty
+                        ? <String>[]
+                        : hashtagsText.split(',').map((tag) => tag.trim().toLowerCase()).toList();
+
+                    _createPost(title, content, hashtags, selectedImage);
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF5C563),
+                    foregroundColor: Colors.black,
                   ),
+                  child: const Text('Post'),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final title = titleController.text.trim();
-                final content = contentController.text.trim();
-                final hashtagsText = hashtagsController.text.trim();
-
-                if (title.isEmpty || content.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please fill in title and content')),
-                  );
-                  return;
-                }
-
-                final hashtags = hashtagsText.isEmpty
-                    ? <String>[]
-                    : hashtagsText.split(',').map((tag) => tag.trim().toLowerCase()).toList();
-
-                _createPost(title, content, hashtags);
-                Navigator.of(context).pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF5C563),
-                foregroundColor: Colors.black,
-              ),
-              child: const Text('Post'),
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -536,6 +635,45 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
             ],
           ),
           const SizedBox(height: 12),
+
+          if (post['image_url'] != null && post['image_url'].toString().isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                post['image_url'],
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: double.infinity,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.broken_image, size: 40, color: Colors.grey),
+                    ),
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    width: double.infinity,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                },
+              ),
+            ),
+          if (post['image_url'] != null && post['image_url'].toString().isNotEmpty)
+            const SizedBox(height: 12),
 
           Text(
             title,
