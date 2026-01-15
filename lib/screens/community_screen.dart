@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../widgets/footer.dart';
 
 class CommunityScreen extends StatefulWidget {
@@ -58,9 +59,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
 
       final posts = List<Map<String, dynamic>>.from(postsResponse);
 
-      // Get likes for each post
       for (var post in posts) {
-        // Get likes count
         final likesResponse = await Supabase.instance.client
             .from('post_likes')
             .select('id, user_email')
@@ -97,7 +96,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
 
       final resources = List<Map<String, dynamic>>.from(response);
 
-      // Group resources by type
       final grouped = <String, List<Map<String, dynamic>>>{};
       for (final resource in resources) {
         final type = resource['type'] as String;
@@ -123,7 +121,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     if (_currentUserEmail == null) return;
 
     try {
-      // Get user name from registrations table
       final userResponse = await Supabase.instance.client
           .from('registrations')
           .select('full_name')
@@ -141,7 +138,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
         'status': 'pending',
       });
 
-      // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -151,7 +147,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
         );
       }
 
-      // Don't refresh posts since pending posts aren't shown
     } catch (e) {
       print('Error creating post: $e');
       if (mounted) {
@@ -167,23 +162,48 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
 
     try {
       if (currentlyLiked) {
-        // Unlike
         await Supabase.instance.client
             .from('post_likes')
             .delete()
             .eq('post_id', postId)
             .eq('user_email', _currentUserEmail!);
       } else {
-        // Like
         await Supabase.instance.client.from('post_likes').insert({
           'post_id': postId,
           'user_email': _currentUserEmail,
         });
       }
 
-      _fetchPosts(); // Refresh posts
+      _fetchPosts();
     } catch (e) {
       print('Error toggling like: $e');
+    }
+  }
+
+  Future<void> _sharePost(Map<String, dynamic> post) async {
+    final title = post['title'] ?? '';
+    final content = post['content'] ?? '';
+    final shareText = '*$title*\n\n$content\n\n_Shared from PolisMitr Community_';
+
+    final whatsappUrl = Uri.parse('whatsapp://send?text=${Uri.encodeComponent(shareText)}');
+
+    try {
+      if (await canLaunchUrl(whatsappUrl)) {
+        await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+      } else {
+        final webWhatsappUrl = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(shareText)}');
+        await launchUrl(webWhatsappUrl, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not launch WhatsApp: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 
@@ -329,7 +349,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
         ),
         body: Column(
           children: [
-            // Tab Bar
             Container(
               color: Colors.white,
               child: TabBar(
@@ -352,7 +371,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                 ],
               ),
             ),
-            // Tab Views
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -385,7 +403,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            // Community Space Header
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -429,7 +446,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
             ),
             const SizedBox(height: 20),
 
-            // Show loading or posts
             if (_isLoadingPosts)
               const Center(child: CircularProgressIndicator())
             else if (_posts.isEmpty)
@@ -488,7 +504,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // User info and tags
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -522,7 +537,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
           ),
           const SizedBox(height: 12),
 
-          // Title
           Text(
             title,
             style: const TextStyle(
@@ -533,7 +547,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
           ),
           const SizedBox(height: 8),
 
-          // Content
           Text(
             content,
             style: TextStyle(
@@ -546,7 +559,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
           ),
           const SizedBox(height: 12),
 
-          // Actions
           Row(
             children: [
               GestureDetector(
@@ -566,11 +578,14 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
               Icon(Icons.chat_bubble_outline, size: 18, color: Colors.grey.shade600),
               const SizedBox(width: 4),
               Text(
-                '0', // Comments not implemented yet
+                '0',
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
               ),
               const Spacer(),
-              Icon(Icons.share_outlined, size: 18, color: Colors.grey.shade600),
+              GestureDetector(
+                onTap: () => _sharePost(post),
+                child: Icon(Icons.share_outlined, size: 18, color: Colors.grey.shade600),
+              ),
             ],
           ),
         ],
@@ -587,7 +602,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Resources Header
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -631,7 +645,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
               ),
               const SizedBox(height: 24),
 
-              // Show loading or resources
               if (_isLoadingResources)
                 const Center(child: CircularProgressIndicator())
               else if (_groupedResources.isEmpty)
@@ -717,7 +730,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
       ),
       child: Stack(
         children: [
-          // Image (placeholder with error handling)
           Positioned.fill(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
@@ -739,7 +751,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
               ),
             ),
           ),
-          // Title overlay
           Positioned(
             bottom: 0,
             left: 0,
@@ -792,7 +803,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
       ),
       child: Stack(
         children: [
-          // Image (placeholder with error handling)
           Positioned.fill(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
@@ -842,7 +852,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                     ),
             ),
           ),
-          // Title overlay
           Positioned(
             bottom: 0,
             left: 0,
