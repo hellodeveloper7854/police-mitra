@@ -221,6 +221,94 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     }
   }
 
+  void _showFullScreenImage(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.black,
+          insetPadding: EdgeInsets.zero,
+          child: Stack(
+            children: [
+              // Full screen image
+              Center(
+                child: InteractiveViewer(
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.error, color: Colors.white, size: 60),
+                            SizedBox(height: 16),
+                            Text(
+                              'Failed to load image',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              // Close button
+              Positioned(
+                top: 40,
+                right: 20,
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                ),
+              ),
+              // Tap to close hint
+              Positioned(
+                bottom: 40,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Pinch to zoom • Tap outside to close',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _showCreatePostDialog() {
     final titleController = TextEditingController();
     final contentController = TextEditingController();
@@ -603,6 +691,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // User info and tags row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -636,86 +725,132 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
           ),
           const SizedBox(height: 12),
 
-          if (post['image_url'] != null && post['image_url'].toString().isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                post['image_url'],
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: double.infinity,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Center(
-                      child: Icon(Icons.broken_image, size: 40, color: Colors.grey),
-                    ),
-                  );
-                },
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    width: double.infinity,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-                },
-              ),
-            ),
-          if (post['image_url'] != null && post['image_url'].toString().isNotEmpty)
-            const SizedBox(height: 12),
-
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          Text(
-            content,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey.shade700,
-              height: 1.4,
-            ),
-            maxLines: 6,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 12),
-
+          // Two column layout for content and image
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              GestureDetector(
-                onTap: () => _toggleLike(post['id'], isLiked),
-                child: Icon(
-                  isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
-                  size: 18,
-                  color: isLiked ? const Color(0xFF6B46C1) : Colors.grey.shade600,
+              // Left column - Content (takes 2/3 space)
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Content
+                    Text(
+                      content,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade700,
+                        height: 1.4,
+                      ),
+                      maxLines: 8,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Like count
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => _toggleLike(post['id'], isLiked),
+                          child: Icon(
+                            isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
+                            size: 18,
+                            color: isLiked ? const Color(0xFF6B46C1) : Colors.grey.shade600,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$likesCount',
+                          style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 4),
-              Text(
-                '$likesCount',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-              ),
-              const Spacer(),
-              GestureDetector(
-                onTap: () => _sharePost(post),
-                child: Icon(Icons.share_outlined, size: 18, color: Colors.grey.shade600),
+
+              const SizedBox(width: 12),
+
+              // Right column - Image and Share (takes 1/3 space)
+              Expanded(
+                flex: 1,
+                child: Column(
+                  children: [
+                    // Image with tap to view full screen
+                    if (post['image_url'] != null && post['image_url'].toString().isNotEmpty)
+                      GestureDetector(
+                        onTap: () => _showFullScreenImage(context, post['image_url']),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            post['image_url'],
+                            width: double.infinity,
+                            height: 100,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: double.infinity,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade200,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Center(
+                                  child: Icon(Icons.broken_image, size: 24, color: Colors.grey),
+                                ),
+                              );
+                            },
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                width: double.infinity,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade200,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Center(
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+
+                    if (post['image_url'] != null && post['image_url'].toString().isNotEmpty)
+                      const SizedBox(height: 8),
+
+                    // Share button - icon only
+                    GestureDetector(
+                      onTap: () => _sharePost(post),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Icon(
+                          Icons.share_outlined,
+                          size: 18,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
