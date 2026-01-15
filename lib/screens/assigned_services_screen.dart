@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/footer.dart';
+import '../utils/certificate_generator.dart';
 
 class AssignedServicesScreen extends StatefulWidget {
   const AssignedServicesScreen({super.key});
@@ -118,7 +119,7 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
           .update(updateData)
           .eq('id', serviceId);
 
-      _fetchAssignedServices(); // Refresh data
+      _fetchAssignedServices();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -133,6 +134,88 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to update participation status: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _downloadCertificate(Map<String, dynamic> service) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('user_email');
+
+      if (email == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('User not authenticated'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      final userResponse = await Supabase.instance.client
+          .from('registrations')
+          .select('full_name')
+          .eq('email', email)
+          .maybeSingle();
+
+      final userName = userResponse?['full_name'] ?? 'Volunteer';
+
+      final dateString = service['assigned_date'] as String?;
+      if (dateString == null) return;
+
+      final serviceDate = DateTime.parse(dateString);
+      final formattedDate = DateFormat('dd MMMM, yyyy').format(serviceDate);
+
+      String durationText = 'N/A';
+      if (service['start_time'] != null && service['end_time'] != null) {
+        final startTime = DateTime.parse(service['start_time']);
+        final endTime = DateTime.parse(service['end_time']);
+        final duration = endTime.difference(startTime);
+        final hours = duration.inHours;
+        final minutes = duration.inMinutes.remainder(60);
+        durationText = '${hours}h ${minutes}m';
+      }
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
+
+      await CertificateGenerator.generateAndDownloadCertificate(
+        userName: userName,
+        serviceName: service['service_name'] ?? 'Police Service',
+        participationArea: _mapEnumToParticipation(service['participation_area'] ?? ''),
+        date: formattedDate,
+        location: service['location'] ?? 'Thane City',
+        duration: durationText,
+      );
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Certificate downloaded successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate certificate: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -742,7 +825,7 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
                       ElevatedButton(
                         onPressed: () => _startService(service['id'].toString()),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981), // Green color
+                          backgroundColor: const Color(0xFF10B981),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
@@ -753,7 +836,7 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
                       ElevatedButton(
                         onPressed: () => _endService(service['id'].toString()),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFEF4444), // Red color
+                          backgroundColor: const Color(0xFFEF4444),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
@@ -777,6 +860,27 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
                         ),
                       ),
                     ],
+                  ],
+                ),
+              ],
+
+              // Certificate Download Button for Completed Services
+              if (!isTodayService && !isUpcomingService && service['end_time'] != null) ...[
+                const SizedBox(width: 12),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () => _downloadCertificate(service),
+                      icon: const Icon(Icons.download, size: 16),
+                      label: const Text('Certificate'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6B46C1),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    ),
                   ],
                 ),
               ],
