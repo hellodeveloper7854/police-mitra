@@ -574,13 +574,6 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                 '$likesCount',
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
               ),
-              const SizedBox(width: 20),
-              Icon(Icons.chat_bubble_outline, size: 18, color: Colors.grey.shade600),
-              const SizedBox(width: 4),
-              Text(
-                '0',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-              ),
               const Spacer(),
               GestureDetector(
                 onTap: () => _sharePost(post),
