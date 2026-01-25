@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static String get baseUrl {
-    return 'http://192.168.1.9:3000/api';
     // For web, use production URL
     if (kIsWeb) {
       return 'https://policemitrabackend.thanepolice.in/api';
@@ -239,40 +238,59 @@ class ApiService {
   // Availability status methods
   static Future<Map<String, dynamic>?> getUserRegistration(String email) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/registrations?email=$email'));
+      final response = await http.get(Uri.parse('$baseUrl/mobileregistrations?email=$email'));
+      print('DEBUG getUserRegistration: Calling URL: $baseUrl/mobileregistrations?email=$email');
       print('DEBUG getUserRegistration: Status Code: ${response.statusCode}');
       print('DEBUG getUserRegistration: Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
-        // Parse response body as JSON object
-        final Map<String, dynamic> responseData = json.decode(response.body);
-        print('DEBUG getUserRegistration: Response is an object');
+        // Try to parse response body
+        final dynamic decoded = json.decode(response.body);
+        print('DEBUG getUserRegistration: Decoded type = ${decoded.runtimeType}');
 
-        // Extract the data array from the response
-        if (responseData['success'] == true && responseData['data'] != null) {
-          final List<dynamic> dataList = responseData['data'];
-          print('DEBUG getUserRegistration: Response contains ${dataList.length} items');
-          print('DEBUG getUserRegistration: Data: $dataList');
+        List<dynamic> dataList;
 
-          // Since backend now filters by email, we should get 0 or 1 result
-          if (dataList.isNotEmpty) {
-            final userData = dataList[0] as Map<String, dynamic>;
-            print('DEBUG getUserRegistration: Found user data: $userData');
-
-            // Verify email matches (case-insensitive)
-            final itemEmail = userData['email']?.toString().toLowerCase().trim();
-            final searchEmail = email.toLowerCase().trim();
-            print('DEBUG getUserRegistration: Comparing "$itemEmail" with "$searchEmail"');
-
-            if (itemEmail == searchEmail) {
-              print('DEBUG getUserRegistration: Email match confirmed!');
-              return userData;
-            } else {
-              print('DEBUG getUserRegistration: Email mismatch!');
-            }
+        // Handle different response formats
+        if (decoded is Map<String, dynamic>) {
+          // Response is an object with data field
+          print('DEBUG getUserRegistration: Response is an object');
+          if (decoded['success'] == true && decoded['data'] != null) {
+            dataList = decoded['data'] as List<dynamic>;
+            print('DEBUG getUserRegistration: Extracted data array from object');
           } else {
-            print('DEBUG getUserRegistration: No user found for email: $email');
+            print('DEBUG getUserRegistration: Response object has no valid data');
+            return null;
           }
+        } else if (decoded is List<dynamic>) {
+          // Response is directly an array
+          print('DEBUG getUserRegistration: Response is directly an array');
+          dataList = decoded;
+        } else {
+          print('DEBUG getUserRegistration: Unknown response format');
+          return null;
+        }
+
+        print('DEBUG getUserRegistration: Response contains ${dataList.length} items');
+        print('DEBUG getUserRegistration: Data: $dataList');
+
+        // Since backend now filters by email, we should get 0 or 1 result
+        if (dataList.isNotEmpty) {
+          final userData = dataList[0] as Map<String, dynamic>;
+          print('DEBUG getUserRegistration: Found user data: $userData');
+
+          // Verify email matches (case-insensitive)
+          final itemEmail = userData['email']?.toString().toLowerCase().trim();
+          final searchEmail = email.toLowerCase().trim();
+          print('DEBUG getUserRegistration: Comparing "$itemEmail" with "$searchEmail"');
+
+          if (itemEmail == searchEmail) {
+            print('DEBUG getUserRegistration: Email match confirmed!');
+            return userData;
+          } else {
+            print('DEBUG getUserRegistration: Email mismatch!');
+          }
+        } else {
+          print('DEBUG getUserRegistration: No user found for email: $email');
         }
       }
       print('DEBUG getUserRegistration: Returning null');
@@ -466,23 +484,38 @@ class ApiService {
   // Station contacts methods
   static Future<List<dynamic>> getStationContacts() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/station-contacts'));
-      print('DEBUG getStationContacts response: ${response.body}');
+      final url = '$baseUrl/station-mobile-contacts';
+      print('🔍 DEBUG getStationContacts: Calling URL: $url');
+
+      final response = await http.get(Uri.parse(url));
+      print('🔍 DEBUG getStationContacts: Status Code = ${response.statusCode}');
+      print('🔍 DEBUG getStationContacts: Response Body = ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('DEBUG getStationContacts: Response data');
+        print('🔍 DEBUG getStationContacts: Parsed JSON successfully');
+        print('🔍 DEBUG getStationContacts: Success flag = ${data['success']}');
+        print('🔍 DEBUG getStationContacts: Message = ${data['message']}');
 
         // Return all station contacts from the data array
         if (data['success'] == true && data['data'] != null) {
           final List<dynamic> contactsList = data['data'];
-          print('DEBUG getStationContacts: Found ${contactsList.length} station contacts');
+          print('✅ DEBUG getStationContacts: Found ${contactsList.length} station contacts');
+          print('✅ DEBUG getStationContacts: First contact = ${contactsList.isNotEmpty ? contactsList[0] : "No contacts"}');
           return contactsList;
+        } else {
+          print('❌ DEBUG getStationContacts: Success flag is false or data is null');
+          print('❌ DEBUG getStationContacts: data["success"] = ${data['success']}');
+          print('❌ DEBUG getStationContacts: data["data"] = ${data['data']}');
         }
+      } else {
+        print('❌ DEBUG getStationContacts: Status code is not 200, it\'s ${response.statusCode}');
       }
+      print('⚠️ DEBUG getStationContacts: Returning empty list');
       return [];
-    } catch (e) {
-      print('Get station contacts error: $e');
+    } catch (e, stackTrace) {
+      print('❌ Get station contacts error: $e');
+      print('❌ Stack trace: $stackTrace');
       return [];
     }
   }
