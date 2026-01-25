@@ -244,25 +244,35 @@ class ApiService {
       print('DEBUG getUserRegistration: Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
-        // Parse response body directly as a list
-        final List<dynamic> dataList = json.decode(response.body);
-        print('DEBUG getUserRegistration: Response is a list with ${dataList.length} items');
-        print('DEBUG getUserRegistration: Data: $dataList');
+        // Parse response body as JSON object
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        print('DEBUG getUserRegistration: Response is an object');
 
-        // Find user by email in the data array
-        if (dataList.isNotEmpty) {
-          for (var item in dataList) {
-            if (item is Map<String, dynamic>) {
-              final itemEmail = item['email']?.toString().toLowerCase();
-              if (itemEmail == email.toLowerCase()) {
-                print('DEBUG getUserRegistration: Found matching user data: $item');
-                return item;
-              }
+        // Extract the data array from the response
+        if (responseData['success'] == true && responseData['data'] != null) {
+          final List<dynamic> dataList = responseData['data'];
+          print('DEBUG getUserRegistration: Response contains ${dataList.length} items');
+          print('DEBUG getUserRegistration: Data: $dataList');
+
+          // Since backend now filters by email, we should get 0 or 1 result
+          if (dataList.isNotEmpty) {
+            final userData = dataList[0] as Map<String, dynamic>;
+            print('DEBUG getUserRegistration: Found user data: $userData');
+
+            // Verify email matches (case-insensitive)
+            final itemEmail = userData['email']?.toString().toLowerCase().trim();
+            final searchEmail = email.toLowerCase().trim();
+            print('DEBUG getUserRegistration: Comparing "$itemEmail" with "$searchEmail"');
+
+            if (itemEmail == searchEmail) {
+              print('DEBUG getUserRegistration: Email match confirmed!');
+              return userData;
+            } else {
+              print('DEBUG getUserRegistration: Email mismatch!');
             }
+          } else {
+            print('DEBUG getUserRegistration: No user found for email: $email');
           }
-          print('DEBUG getUserRegistration: No matching user found for email: $email');
-        } else {
-          print('DEBUG getUserRegistration: data array is empty');
         }
       }
       print('DEBUG getUserRegistration: Returning null');

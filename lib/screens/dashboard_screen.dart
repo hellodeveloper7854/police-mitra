@@ -48,9 +48,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           });
           _startTimer();
         } else {
+          // User is marked as available but no active log found
+          // This is a data inconsistency - show as available but without timer
+          print('Warning: User marked as available but no active log found');
           setState(() {
-            _isAvailable = false;
-            _elapsedTime = Duration.zero;
+            _isAvailable = true;
+            _startTime = null; // No timer will be shown
           });
           _timer?.cancel();
         }
@@ -277,11 +280,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            if (isAvailable) ...[
+                            if (isAvailable && _startTime != null) ...[
                               const SizedBox(height: 8),
                               Text(
                                 '${_elapsedTime.inHours.toString().padLeft(2, '0')}:${(_elapsedTime.inMinutes % 60).toString().padLeft(2, '0')}:${(_elapsedTime.inSeconds % 60).toString().padLeft(2, '0')}',
                                 style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                            if (isAvailable && _startTime == null) ...[
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Active',
+                                style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 14,
                                 ),
