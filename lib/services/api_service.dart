@@ -454,29 +454,21 @@ class ApiService {
   }
 
   // Station contacts methods
-  static Future<List<dynamic>> getStationContacts(String policeStation) async {
+  static Future<List<dynamic>> getStationContacts() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/station-contacts?station=$policeStation'));
+      final response = await http.get(Uri.parse('$baseUrl/station-contacts'));
       print('DEBUG getStationContacts response: ${response.body}');
 
       if (response.statusCode == 200) {
-        // Parse response body directly as a list
-        final List<dynamic> dataList = json.decode(response.body);
-        print('DEBUG getStationContacts: Response is a list with ${dataList.length} items');
+        final data = json.decode(response.body);
+        print('DEBUG getStationContacts: Response data');
 
-        // Filter by police station if needed
-        if (policeStation.isNotEmpty) {
-          final filteredList = dataList.where((item) {
-            if (item is Map<String, dynamic>) {
-              final station = item['policeStation']?.toString().toLowerCase();
-              return station == policeStation.toLowerCase();
-            }
-            return false;
-          }).toList();
-          return filteredList;
+        // Return all station contacts from the data array
+        if (data['success'] == true && data['data'] != null) {
+          final List<dynamic> contactsList = data['data'];
+          print('DEBUG getStationContacts: Found ${contactsList.length} station contacts');
+          return contactsList;
         }
-
-        return dataList;
       }
       return [];
     } catch (e) {
