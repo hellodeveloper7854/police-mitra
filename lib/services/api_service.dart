@@ -343,25 +343,57 @@ class ApiService {
   // Availability logs methods
   static Future<bool> createAvailabilityLog(Map<String, dynamic> logData) async {
     try {
+      print('\n🔍 createAvailabilityLog: Starting...');
+      print('🔍 Log data: $logData');
+
       final response = await http.post(
         Uri.parse('$baseUrl/availability-logs'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(logData),
       );
 
+      print('🔍 Response status code: ${response.statusCode}');
+      print('🔍 Response body: ${response.body}');
+
       if (response.statusCode == 201) {
+        // Newly created log
         final data = jsonDecode(response.body);
+        print('✅ createAvailabilityLog: New log created successfully');
         return data['success'] ?? false;
+      } else if (response.statusCode == 200) {
+        // Existing log found and returned
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['is_existing'] == true) {
+          print('✅ createAvailabilityLog: Using existing log');
+          return true;
+        }
+        return false;
+      } else if (response.statusCode == 409) {
+        // Conflict - log already exists (fallback)
+        print('⚠️ createAvailabilityLog: Log already exists (409 conflict)');
+        final data = jsonDecode(response.body);
+        print('Existing log ID: ${data['existing_log_id']}');
+        // Return true since the log exists (idempotent operation)
+        return true;
+      } else {
+        print('❌ createAvailabilityLog: Status code is not 201/200, it\'s ${response.statusCode}');
+        print('❌ Response: ${response.body}');
+        return false;
       }
-      return false;
-    } catch (e) {
-      print('Create availability log error: $e');
+    } catch (e, stackTrace) {
+      print('❌ Create availability log error: $e');
+      print('❌ Stack trace: $stackTrace');
       return false;
     }
   }
 
   static Future<bool> updateAvailabilityLogEndTime(String email, String startTime, String endTime) async {
     try {
+      print('\n🔍 updateAvailabilityLogEndTime: Starting...');
+      print('🔍 Email: $email');
+      print('🔍 Start time: $startTime');
+      print('🔍 End time: $endTime');
+
       final response = await http.put(
         Uri.parse('$baseUrl/availability-logs/end-time'),
         headers: {'Content-Type': 'application/json'},
@@ -372,13 +404,21 @@ class ApiService {
         }),
       );
 
+      print('🔍 Response status code: ${response.statusCode}');
+      print('🔍 Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        print('✅ updateAvailabilityLogEndTime: Success = ${data['success']}');
         return data['success'] ?? false;
+      } else {
+        print('❌ updateAvailabilityLogEndTime: Status code is ${response.statusCode}');
+        print('❌ Response: ${response.body}');
+        return false;
       }
-      return false;
-    } catch (e) {
-      print('Update availability log error: $e');
+    } catch (e, stackTrace) {
+      print('❌ Update availability log error: $e');
+      print('❌ Stack trace: $stackTrace');
       return false;
     }
   }

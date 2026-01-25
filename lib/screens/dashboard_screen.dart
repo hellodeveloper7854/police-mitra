@@ -120,49 +120,134 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final email = prefs.getString('user_email');
     if (email == null) return;
 
+    print('\n========== TOGGLE AVAILABILITY START ==========');
+    print('Current status: ${_isAvailable ? "Available" : "Not Available"}');
+    print('New status: ${newStatus ? "Available" : "Not Available"}');
+    print('User email: $email');
+    print('Current _startTime: $_startTime');
+
     try {
-      // Update registrations table
+      // Step 1: Update registrations table
       final statusString = newStatus ? 'available' : 'not-available';
-      await ApiService.updateAvailabilityStatus(email, statusString);
+      print('\n📝 Step 1: Updating registrations table...');
+      final statusUpdated = await ApiService.updateAvailabilityStatus(email, statusString);
+      print('Status update result: $statusUpdated');
 
       if (newStatus) {
-        // Becoming available - insert start time
-        _startTime = DateTime.now();
+        // BECOMING AVAILABLE
+        print('\n✨ BRANCH: User is becoming AVAILABLE');
 
-        // Fetch police_station from registrations
+        // Step 2: Check for existing open logs
+        print('\n🔍 Step 2: Checking for existing open logs...');
+        final existingLog = await ApiService.getLatestAvailabilityLog(email);
+        print('Existing log: $existingLog');
+
+        if (existingLog != null) {
+          print('Existing log found!');
+          print('  - start_time: ${existingLog['availability_start_time']}');
+          print('  - end_time: ${existingLog['end_time']}');
+
+          if (existingLog['end_time'] == null) {
+            // Found an open log - close it first
+            print('\n⚠️ Step 3: Found UNCLOSED log, closing it first...');
+            final oldStartTime = existingLog['availability_start_time'];
+            print('Old start_time: $oldStartTime');
+
+            final closeResult = await ApiService.updateAvailabilityLogEndTime(
+              email,
+              oldStartTime,
+              DateTime.now().toIso8601String()
+            );
+            print('Close result: $closeResult');
+          } else {
+            print('\n✅ Step 3: Existing log is already closed, no need to close');
+          }
+        } else {
+          print('\n✅ Step 3: No existing logs found');
+        }
+
+        // Step 4: Create new availability log
+        print('\n📝 Step 4: Creating NEW availability log...');
+        _startTime = DateTime.now();
+        print('New _startTime: $_startTime');
+
         final userData = await ApiService.getUserRegistration(email);
         final policeStation = userData?['police_station'];
+        print('Police station: $policeStation');
 
         if (policeStation != null) {
-          await ApiService.createAvailabilityLog({
+          final logData = {
             'user_email': email,
             'police_station': policeStation,
             'date': DateTime.now().toIso8601String().split('T')[0],
             'availability_start_time': _startTime!.toIso8601String(),
-          });
+          };
+          print('Log data: $logData');
+
+          final createResult = await ApiService.createAvailabilityLog(logData);
+          print('Create log result: $createResult');
+
+          if (createResult) {
+            print('✅ Successfully created new availability log');
+          } else {
+            print('❌ Failed to create new availability log');
+          }
+        } else {
+          print('❌ Police station is null, cannot create log');
         }
+
         _startTimer();
+        print('Started timer');
+
       } else {
-        // Becoming unavailable - update end time
+        // BECOMING UNAVAILABLE
+        print('\n🛑 BRANCH: User is becoming NOT AVAILABLE');
+
+        // Step 2: Update end time
+        print('\n📝 Step 2: Updating end_time...');
+        print('_startTime is null: ${_startTime == null}');
+
         if (_startTime != null) {
-          await ApiService.updateAvailabilityLogEndTime(
+          final startTimeStr = _startTime!.toIso8601String();
+          final endTimeStr = DateTime.now().toIso8601String();
+          print('  - start_time: $startTimeStr');
+          print('  - end_time: $endTimeStr');
+
+          final updateResult = await ApiService.updateAvailabilityLogEndTime(
             email,
-            _startTime!.toIso8601String(),
-            DateTime.now().toIso8601String()
+            startTimeStr,
+            endTimeStr
           );
+          print('Update end_time result: $updateResult');
+
+          if (updateResult) {
+            print('✅ Successfully updated end_time');
+          } else {
+            print('❌ Failed to update end_time');
+          }
+        } else {
+          print('❌ Cannot update end_time - _startTime is null!');
+          print('This means we don\'t have a log to close');
         }
+
         _timer?.cancel();
         _elapsedTime = Duration.zero;
+        _startTime = null;
+        print('Timer cancelled and reset');
       }
 
       setState(() {
         _isAvailable = newStatus;
       });
 
-      print('Availability updated to: ${newStatus ? "Available" : "Not Available"}');
-    } catch (e) {
-      print('Error updating availability: $e');
-      // Optionally show snackbar
+      print('\n✅ Final State: ${_isAvailable ? "Available" : "Not Available"}');
+      print('========== TOGGLE AVAILABILITY END ==========\n');
+
+    } catch (e, stackTrace) {
+      print('\n❌❌❌ ERROR in _toggleAvailability ❌❌❌');
+      print('Error: $e');
+      print('Stack trace: $stackTrace');
+      print('==============================================\n');
     }
   }
 
