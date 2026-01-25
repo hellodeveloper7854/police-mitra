@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../services/api_service.dart';
 
 class SettingsResetPasswordScreen extends StatefulWidget {
   const SettingsResetPasswordScreen({super.key});
@@ -105,11 +106,41 @@ class _SettingsResetPasswordScreenState extends State<SettingsResetPasswordScree
 
     setState(() => _isLoading = true);
     try {
-      // Password reset functionality not implemented yet
-      await Future.delayed(const Duration(seconds: 2)); // Simulate API call
+      // Get the current user's email
+      final email = await ApiService.getCurrentUserEmail();
+
+      if (email == null) {
+        if (mounted) {
+          _showDialog('Unable to retrieve user information. Please login again.', Colors.red);
+          // Navigate to login after dialog is dismissed
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              context.go('/login');
+            }
+          });
+        }
+        return;
+      }
+
+      // Call the reset password API
+      final result = await ApiService.resetPassword(email, newPassword);
 
       if (mounted) {
-        _showDialog('Password reset feature is not available yet. Please contact support.', Colors.orange);
+        if (result != null && result['success']) {
+          _showDialog('Password reset successfully! Please login with your new password.', Colors.green);
+          // Clear password fields
+          _oldPasswordController.clear();
+          _newPasswordController.clear();
+          _confirmPasswordController.clear();
+          // Navigate to login after successful password reset
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              context.go('/login');
+            }
+          });
+        } else {
+          _showDialog('Failed to reset password. Please try again.', Colors.red);
+        }
       }
     } catch (e) {
       if (mounted) {

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static String get baseUrl {
+    return 'http://192.168.1.9:3000/api';
     // For web, use production URL
     if (kIsWeb) {
       return 'https://policemitrabackend.thanepolice.in/api';
@@ -64,6 +65,32 @@ class ApiService {
   static Future<String?> getCurrentUserEmail() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_email');
+  }
+
+  // Reset password method
+  static Future<Map<String, dynamic>?> resetPassword(String email, String newPassword) async {
+    try {
+      final url = '$baseUrl/user-credentials/reset-password';
+      print('Reset password URL: $url');
+      final response = await http.put(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'newPassword': newPassword}),
+      );
+      print('Reset password response status: ${response.statusCode}');
+      print('Reset password response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success']) {
+          return data;
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Reset password error: $e');
+      return null;
+    }
   }
 
   // Registration methods

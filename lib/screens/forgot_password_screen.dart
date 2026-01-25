@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../services/api_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -282,18 +283,39 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                               setState(() => _isLoading = true);
                               try {
-                                // Password reset functionality not implemented yet
-                                await Future.delayed(const Duration(seconds: 2)); // Simulate API call
+                                // Call the reset password API
+                                final result = await ApiService.resetPassword(email, newPassword);
 
                                 if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Password reset feature is not available yet. Please contact support.')),
-                                  );
+                                  if (result != null && result['success']) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Password reset successfully! Please login with your new password.'),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                    // Navigate back to login after a short delay
+                                    Future.delayed(const Duration(seconds: 2), () {
+                                      if (mounted) {
+                                        context.go('/login');
+                                      }
+                                    });
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Failed to reset password. Please check your email and try again.'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
                                 }
                               } catch (e) {
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Error: $e')),
+                                    SnackBar(
+                                      content: Text('Error: $e'),
+                                      backgroundColor: Colors.red,
+                                    ),
                                   );
                                 }
                               } finally {
