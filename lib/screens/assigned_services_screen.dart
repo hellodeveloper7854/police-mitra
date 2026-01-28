@@ -333,7 +333,7 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
               controller: reasonController,
               maxLines: 3,
               decoration: const InputDecoration(
-                hintText: 'Please provide a reason why you cannot participate...',
+                hintText: 'Please provide a reason why you cannot participate... (Optional)',
                 border: OutlineInputBorder(),
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.red),
@@ -348,21 +348,13 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (reasonController.text.trim().isNotEmpty) {
-                  _updateParticipationStatus(
-                    serviceId,
-                    'declined',
-                    reason: reasonController.text.trim()
-                  );
-                  Navigator.of(context).pop();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please provide a reason'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
+                // Reason is now optional - submit regardless of whether reason is provided
+                _updateParticipationStatus(
+                  serviceId,
+                  'declined',
+                  reason: reasonController.text.trim().isEmpty ? null : reasonController.text.trim()
+                );
+                Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
