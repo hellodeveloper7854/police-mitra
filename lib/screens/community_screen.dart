@@ -198,7 +198,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
   Future<void> _sharePost(Map<String, dynamic> post) async {
     final title = post['title'] ?? '';
     final content = post['content'] ?? '';
-    final shareText = '$title\n\n$content\n\nShared from PolisMitr Community';
+    final shareText = '$title\n\n$content\n\nShared from Police Mitra Community';
 
     try {
       await Share.share(shareText, subject: title);
