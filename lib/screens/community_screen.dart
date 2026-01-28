@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:io';
 import '../widgets/footer.dart';
+import '../widgets/notification_bell.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -820,6 +821,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
             onPressed: _onBackPressed,
           ),
           actions: [
+            const NotificationBell(iconColor: Colors.black),
             Padding(
               padding: const EdgeInsets.only(right: 12.0),
               child: Image.asset(

@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/footer.dart';
+import '../widgets/notification_bell.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -189,6 +190,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         actions: [
+          const NotificationBell(),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => context.push('/settings'),

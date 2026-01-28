@@ -21,6 +21,7 @@ import 'screens/settings_screen.dart';
 import 'screens/feedback_screen.dart';
 import 'screens/feedback_history_screen.dart';
 import 'screens/settings_reset_password_screen.dart';
+import 'screens/notifications_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -195,6 +196,12 @@ final GoRouter _router = GoRouter(
       path: '/settings-reset-password',
       builder: (BuildContext context, GoRouterState state) {
         return const SettingsResetPasswordScreen();
+      },
+    ),
+    GoRoute(
+      path: '/notifications',
+      builder: (BuildContext context, GoRouterState state) {
+        return const NotificationsScreen();
       },
     ),
   ],
