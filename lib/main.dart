@@ -21,6 +21,8 @@ import 'screens/settings_screen.dart';
 import 'screens/feedback_screen.dart';
 import 'screens/feedback_history_screen.dart';
 import 'screens/settings_reset_password_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   //production account
@@ -42,6 +44,27 @@ void main() async {
     print('DEBUG: Session user: ${session.user?.email}');
     print('DEBUG: Session expires: ${session.expiresAt}');
   }
+
+  // Listen to auth state changes
+  Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+    final AuthChangeEvent event = data.event;
+    final Session? session = data.session;
+
+    print('DEBUG: Auth state changed: $event');
+    print('DEBUG: Session is now: ${session != null ? 'EXISTS' : 'NULL'}');
+
+    // When session is lost, clear the stored email
+    if (event == AuthChangeEvent.tokenRefreshed ||
+        event == AuthChangeEvent.signedIn ||
+        event == AuthChangeEvent.userUpdated) {
+      print('DEBUG: Auth event: $event - keeping user logged in');
+    } else if (event == AuthChangeEvent.signedOut) {
+      print('DEBUG: User signed out - clearing stored email');
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.remove('user_email');
+      });
+    }
+  });
 
   runApp(const MyApp());
 }
