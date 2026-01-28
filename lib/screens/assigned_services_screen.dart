@@ -575,49 +575,59 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
       );
     }
 
-    // If status is selected, show non-editable status display
+    // If status is selected, show editable status display
     List<Widget> children = [
-      Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: participationStatus == 'confirmed'
-              ? Colors.green.shade50
-              : Colors.red.shade50,
-          border: Border.all(
+      GestureDetector(
+        onTap: () => _showStatusEditDialog(service),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
             color: participationStatus == 'confirmed'
-                ? Colors.green.shade300
-                : Colors.red.shade300,
-          ),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              participationStatus == 'confirmed'
-                  ? Icons.check_circle
-                  : Icons.cancel,
-              size: 16,
+                ? Colors.green.shade50
+                : Colors.red.shade50,
+            border: Border.all(
               color: participationStatus == 'confirmed'
-                  ? Colors.green.shade600
-                  : Colors.red.shade600,
+                  ? Colors.green.shade300
+                  : Colors.red.shade300,
             ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            children: [
+              Icon(
                 participationStatus == 'confirmed'
-                    ? 'I can participate'
-                    : 'I can\'t participate',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: participationStatus == 'confirmed'
-                      ? Colors.green.shade700
-                      : Colors.red.shade700,
+                    ? Icons.check_circle
+                    : Icons.cancel,
+                size: 16,
+                color: participationStatus == 'confirmed'
+                    ? Colors.green.shade600
+                    : Colors.red.shade600,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  participationStatus == 'confirmed'
+                      ? 'I can participate'
+                      : 'I can\'t participate',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: participationStatus == 'confirmed'
+                        ? Colors.green.shade700
+                        : Colors.red.shade700,
+                  ),
                 ),
               ),
-            ),
-          ],
+              Icon(
+                Icons.edit,
+                size: 14,
+                color: participationStatus == 'confirmed'
+                    ? Colors.green.shade600
+                    : Colors.red.shade600,
+              ),
+            ],
+          ),
         ),
       ),
     ];
@@ -668,6 +678,84 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: children,
+    );
+  }
+
+  void _showStatusEditDialog(Map<String, dynamic> service) {
+    final currentStatus = service['participation_status'] as String? ?? '';
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Change Participation Status'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Current status: ${currentStatus == 'confirmed' ? 'I can participate' : 'I can\'t participate'}',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Select new status:',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // If changing to declined, show reason dialog
+                if (currentStatus != 'declined') {
+                  _showReasonDialog(service['id'].toString());
+                } else {
+                  // Changing from declined to confirmed
+                  _updateParticipationStatus(service['id'].toString(), 'confirmed');
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('I can participate'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Only show reason dialog if not already declined
+                if (currentStatus != 'declined') {
+                  _showReasonDialog(service['id'].toString());
+                } else {
+                  // Already declined, can show a message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('You have already declined this service'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('I can\'t participate'),
+            ),
+          ],
+        );
+      },
     );
   }
 
