@@ -18,6 +18,7 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
   List<Map<String, dynamic>> _availabilityLogs = [];
   DateTime? _selectedDate;
   List<Map<String, dynamic>> _filteredLogs = [];
+  Duration _totalDuration = Duration.zero;
 
   @override
   void initState() {
@@ -55,6 +56,10 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
           .order('created_at', ascending: false);
 
       _availabilityLogs = List<Map<String, dynamic>>.from(response);
+
+      // Calculate total duration from all logs that have both start and end time
+      _calculateTotalDuration();
+
       _updateFilteredLogs();
 
       setState(() {
@@ -65,6 +70,43 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
         _error = 'Failed to load availability logs: $e';
         _isLoading = false;
       });
+    }
+  }
+
+  void _calculateTotalDuration() {
+    int totalSeconds = 0;
+
+    for (final log in _availabilityLogs) {
+      final startTime = log['availability_start_time'];
+      final endTime = log['end_time'];
+
+      if (startTime != null && endTime != null) {
+        try {
+          final start = DateTime.parse(startTime);
+          final end = DateTime.parse(endTime);
+          final difference = end.difference(start);
+          totalSeconds += difference.inSeconds;
+        } catch (e) {
+          print('Error parsing duration for log ${log['id']}: $e');
+        }
+      }
+    }
+
+    setState(() {
+      _totalDuration = Duration(seconds: totalSeconds);
+    });
+  }
+
+  String _formatDuration(Duration duration) {
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+
+    if (hours > 0) {
+      return '${hours}h ${minutes}m';
+    } else if (minutes > 0) {
+      return '${minutes}m';
+    } else {
+      return '0m';
     }
   }
 
@@ -131,7 +173,83 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
                   const SizedBox(width: 12),
                 ],
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 30),
+
+              // Total Hours Served Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6B46C1), Color(0xFF8B5CF6)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6B46C1).withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.access_time,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Total Hours Served',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'as Police Mitra',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      _formatDuration(_totalDuration),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 30),
 
               // Title
               RichText(
