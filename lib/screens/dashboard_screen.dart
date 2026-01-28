@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/footer.dart';
 import '../widgets/notification_bell.dart';
@@ -175,15 +176,96 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     bool isAvailable = _isAvailable;
-    
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Image.asset('assets/images/logo.png', height: 80, width: 80),
-            const SizedBox(width: 8),
-            const Text(
+
+    return WillPopScope(
+      onWillPop: () async {
+        // Show exit confirmation dialog
+        final shouldExit = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF5C563).withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.exit_to_app,
+                    color: Color(0xFFF5C563),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Exit App',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            content: const Text(
+              'Are you sure you want to exit the Police Mitra app?',
+              style: TextStyle(
+                fontSize: 16,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF5C563),
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Exit',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+
+        // If user confirmed exit, close the app
+        if (shouldExit == true) {
+          // Exit the app
+          exit(0);
+        }
+
+        // Prevent default back behavior
+        return false;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          title: Row(
+            children: [
+              Image.asset('assets/images/logo.png', height: 80, width: 80),
+              const SizedBox(width: 8),
+              const Text(
               'पोलीस मित्र',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
@@ -340,6 +422,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
       bottomNavigationBar: const FooterWidget(),
+      ),
     );
   }
 

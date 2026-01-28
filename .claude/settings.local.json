@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(fvm flutter:*)",
-      "Bash(flutter pub get:*)"
+      "Bash(flutter pub get:*)",
+      "Bash(flutter clean:*)",
+      "Bash(dart analyze:*)"
     ],
     "deny": [],
     "ask": []
