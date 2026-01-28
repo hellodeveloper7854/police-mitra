@@ -26,37 +26,8 @@ class _AvailabilityStatusScreenState extends State<AvailabilityStatusScreen> {
   }
 
   Future<void> _onBackPressed() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final email = prefs.getString('user_email');
-
-      if (email == null) {
-        if (mounted) context.go('/login');
-        return;
-      }
-
-      final user = await Supabase.instance.client
-          .from('registrations')
-          .select('verification_status')
-          .eq('email', email)
-          .order('created_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
-
-      final normalized =
-          (user?['verification_status'] ?? '').toString().trim().toLowerCase();
-
-      if (normalized == 'verified' ||
-          normalized == 'approve' ||
-          normalized == 'approved') {
-        context.go('/dashboard');
-      } else {
-        context.go('/status');
-      }
-    } catch (e) {
-      print('ERROR: Back navigation failed - $e');
-      context.go('/login');
-    }
+    // Navigate back to settings (Account page) instead of dashboard
+    context.push('/settings');
   }
 
   Future<void> _fetchAvailabilityLogs() async {
