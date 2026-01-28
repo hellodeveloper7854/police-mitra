@@ -215,6 +215,308 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     }
   }
 
+  void _showPostDetailDialog(Map<String, dynamic> post) {
+    final username = post['user_name'] ?? 'Anonymous';
+    final createdAt = DateTime.parse(post['created_at']);
+    final now = DateTime.now();
+    final difference = now.difference(createdAt);
+
+    String timeAgo;
+    if (difference.inDays > 0) {
+      timeAgo = '${difference.inDays} days ago';
+    } else if (difference.inHours > 0) {
+      timeAgo = '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      timeAgo = '${difference.inMinutes}m ago';
+    } else {
+      timeAgo = 'Just now';
+    }
+
+    final tags = List<String>.from(post['hashtags'] ?? []);
+    final title = post['title'] ?? '';
+    final content = post['content'] ?? '';
+    final imageUrl = post['image_url'];
+    final likesCount = post['likes_count'] ?? 0;
+    final isLiked = post['is_liked'] ?? false;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            constraints: const BoxConstraints(maxHeight: 700),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header with close button
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF6B46C1),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Post Details',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Scrollable content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // User info and time
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundColor: const Color(0xFF6B46C1),
+                              child: Text(
+                                username[0].toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  username,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  timeAgo,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Title
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Image if available
+                        if (imageUrl != null && imageUrl.toString().isNotEmpty)
+                          Column(
+                            children: [
+                              GestureDetector(
+                                onTap: () => _showFullScreenImage(context, imageUrl),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    imageUrl,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        width: double.infinity,
+                                        height: 200,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade200,
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Center(
+                                          child: Icon(Icons.broken_image, size: 40, color: Colors.grey),
+                                        ),
+                                      );
+                                    },
+                                    loadingBuilder: (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Container(
+                                        width: double.infinity,
+                                        height: 200,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade200,
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
+
+                        // Content
+                        Text(
+                          content,
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Colors.grey.shade800,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Hashtags
+                        if (tags.isNotEmpty)
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: tags.map((tag) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF6B46C1).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: const Color(0xFF6B46C1).withOpacity(0.3),
+                                  ),
+                                ),
+                                child: Text(
+                                  '#$tag',
+                                  style: const TextStyle(
+                                    color: Color(0xFF6B46C1),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        const SizedBox(height: 16),
+
+                        // Divider
+                        Divider(color: Colors.grey.shade300),
+                        const SizedBox(height: 16),
+
+                        // Action buttons row
+                        Row(
+                          children: [
+                            // Like button
+                            GestureDetector(
+                              onTap: () {
+                                _toggleLike(post['id'], isLiked);
+                                Navigator.of(context).pop();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: isLiked ? const Color(0xFF6B46C1).withOpacity(0.1) : Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(
+                                    color: isLiked ? const Color(0xFF6B46C1) : Colors.grey.shade300,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
+                                      size: 20,
+                                      color: isLiked ? const Color(0xFF6B46C1) : Colors.grey.shade600,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '$likesCount',
+                                      style: TextStyle(
+                                        color: isLiked ? const Color(0xFF6B46C1) : Colors.grey.shade700,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(width: 12),
+
+                            // Share button
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () => _sharePost(post),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF5C563),
+                                    borderRadius: BorderRadius.circular(24),
+                                  ),
+                                  child: const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.share_outlined,
+                                        size: 20,
+                                        color: Colors.black,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Share Post',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _showFullScreenImage(BuildContext context, String imageUrl) {
     showDialog(
       context: context,
@@ -675,180 +977,183 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     final likesCount = post['likes_count'] ?? 0;
     final isLiked = post['is_liked'] ?? false;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // User info and tags row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '$username • $timeAgo',
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 13,
+    return GestureDetector(
+      onTap: () => _showPostDetailDialog(post),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // User info and tags row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '$username • $timeAgo',
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 13,
+                  ),
                 ),
-              ),
-              Row(
-                children: tags.map((tag) {
-                  return Container(
-                    margin: const EdgeInsets.only(left: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6B46C1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '#$tag',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
+                Row(
+                  children: tags.map((tag) {
+                    return Container(
+                      margin: const EdgeInsets.only(left: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6B46C1),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Two column layout for content and image
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Left column - Content (takes 2/3 space)
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Content
-                    Text(
-                      content,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey.shade700,
-                        height: 1.4,
-                      ),
-                      maxLines: 8,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Like count
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => _toggleLike(post['id'], isLiked),
-                          child: Icon(
-                            isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
-                            size: 18,
-                            color: isLiked ? const Color(0xFF6B46C1) : Colors.grey.shade600,
-                          ),
+                      child: Text(
+                        '#$tag',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$likesCount',
-                          style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    );
+                  }).toList(),
                 ),
-              ),
+              ],
+            ),
+            const SizedBox(height: 12),
 
-              const SizedBox(width: 12),
-
-              // Right column - Image and Share (takes 1/3 space)
-              Expanded(
-                flex: 1,
-                child: Column(
-                  children: [
-                    // Image with tap to view full screen
-                    if (post['image_url'] != null && post['image_url'].toString().isNotEmpty)
-                      GestureDetector(
-                        onTap: () => _showFullScreenImage(context, post['image_url']),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            post['image_url'],
-                            width: double.infinity,
-                            height: 100,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                width: double.infinity,
-                                height: 100,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade200,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Center(
-                                  child: Icon(Icons.broken_image, size: 24, color: Colors.grey),
-                                ),
-                              );
-                            },
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Container(
-                                width: double.infinity,
-                                height: 100,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade200,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Center(
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                ),
-                              );
-                            },
-                          ),
+            // Two column layout for content and image
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left column - Content (takes 2/3 space)
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                         ),
                       ),
-
-                    if (post['image_url'] != null && post['image_url'].toString().isNotEmpty)
                       const SizedBox(height: 8),
 
-                    // Share button - icon only
-                    GestureDetector(
-                      onTap: () => _sharePost(post),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(6),
+                      // Content
+                      Text(
+                        content,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade700,
+                          height: 1.4,
                         ),
-                        child: const Icon(
-                          Icons.share_outlined,
-                          size: 18,
-                          color: Colors.grey,
+                        maxLines: 8,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Like count
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => _toggleLike(post['id'], isLiked),
+                            child: Icon(
+                              isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
+                              size: 18,
+                              color: isLiked ? const Color(0xFF6B46C1) : Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$likesCount',
+                            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // Right column - Image and Share (takes 1/3 space)
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    children: [
+                      // Image with tap to view full screen
+                      if (post['image_url'] != null && post['image_url'].toString().isNotEmpty)
+                        GestureDetector(
+                          onTap: () => _showFullScreenImage(context, post['image_url']),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              post['image_url'],
+                              width: double.infinity,
+                              height: 100,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: double.infinity,
+                                  height: 100,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade200,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Center(
+                                    child: Icon(Icons.broken_image, size: 24, color: Colors.grey),
+                                  ),
+                                );
+                              },
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Container(
+                                  width: double.infinity,
+                                  height: 100,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade200,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Center(
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+
+                      if (post['image_url'] != null && post['image_url'].toString().isNotEmpty)
+                        const SizedBox(height: 8),
+
+                      // Share button - icon only
+                      GestureDetector(
+                        onTap: () => _sharePost(post),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(
+                            Icons.share_outlined,
+                            size: 18,
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
