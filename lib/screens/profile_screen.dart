@@ -308,12 +308,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        final normalized = (_verificationStatus ?? '').trim().toLowerCase();
-        if (normalized == 'verified' || normalized == 'approve' || normalized == 'approved') {
-          context.go('/dashboard');
-        } else {
-          context.go('/status');
-        }
+        // Navigate back to settings (Account page) instead of dashboard
+        context.go('/settings');
         return false; // Prevent default back
       },
       child: Scaffold(
@@ -329,12 +325,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.purple),
             onPressed: () {
-              final normalized = (_verificationStatus ?? '').trim().toLowerCase();
-              if (normalized == 'verified' || normalized == 'approve' || normalized == 'approved') {
-                context.push('/dashboard');
-              } else {
-                context.push('/status');
-              }
+              // Navigate back to settings (Account page)
+              context.push('/settings');
             },
             tooltip: 'Back',
           ),
