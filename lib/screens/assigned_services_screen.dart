@@ -814,16 +814,34 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (service['start_time'] == null) ...[
-                      ElevatedButton(
-                        onPressed: () => _startService(service['id'].toString()),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
-                          foregroundColor: Colors.white,
+                      // Check if participation status is declined
+                      if (service['participation_status'] == 'declined')
+                        Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'Not Participating',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        )
+                      else
+                        ElevatedButton(
+                          onPressed: () => _startService(service['id'].toString()),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF10B981),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                          child: const Text('Start Service'),
                         ),
-                        child: const Text('Start Service'),
-                      ),
                     ] else if (service['end_time'] == null) ...[
                       ElevatedButton(
                         onPressed: () => _endService(service['id'].toString()),
