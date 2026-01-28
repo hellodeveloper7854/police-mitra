@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:share_plus/share_plus.dart';
 import 'dart:io';
 import '../widgets/footer.dart';
 
@@ -197,22 +198,15 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
   Future<void> _sharePost(Map<String, dynamic> post) async {
     final title = post['title'] ?? '';
     final content = post['content'] ?? '';
-    final shareText = '*$title*\n\n$content\n\n_Shared from PolisMitr Community_';
-
-    final whatsappUrl = Uri.parse('whatsapp://send?text=${Uri.encodeComponent(shareText)}');
+    final shareText = '$title\n\n$content\n\nShared from PolisMitr Community';
 
     try {
-      if (await canLaunchUrl(whatsappUrl)) {
-        await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
-      } else {
-        final webWhatsappUrl = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(shareText)}');
-        await launchUrl(webWhatsappUrl, mode: LaunchMode.externalApplication);
-      }
+      await Share.share(shareText, subject: title);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Could not launch WhatsApp: $e'),
+            content: Text('Could not share post: $e'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 2),
           ),
