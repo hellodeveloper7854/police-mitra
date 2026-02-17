@@ -9,7 +9,8 @@
       "Bash(fvm dart analyze:*)",
       "Bash(flutter:*)",
       "Bash(dir assetsfonts 2)",
-      "Bash(nul)"
+      "Bash(nul)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

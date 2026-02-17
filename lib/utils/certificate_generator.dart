@@ -16,6 +16,23 @@ class CertificateGenerator {
     required String location,
     required String duration,
   }) async {
+    // Sanitize input strings to remove problematic characters
+    String sanitizeString(String input) {
+      // Remove null characters and other non-printable characters
+      return input.replaceAll(RegExp(r'[\x00-\x08\x0B-\x0C\x0E-\x1F]'), '').trim();
+    }
+
+    userName = sanitizeString(userName);
+    serviceName = sanitizeString(serviceName);
+    participationArea = sanitizeString(participationArea);
+    location = sanitizeString(location);
+
+    // Detect if text contains Hindi/Devanagari characters
+    bool containsHindiText(String text) {
+      // Devanagari Unicode range: U+0900 to U+097F
+      return text.contains(RegExp(r'[\u0900-\u097F]'));
+    }
+
     // Load Hindi font for Devanagari text support
     Font hindiFont;
     try {
@@ -285,9 +302,9 @@ class CertificateGenerator {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        userName.toUpperCase(),
+                        containsHindiText(userName) ? userName : userName.toUpperCase(),
                         style: TextStyle(
-                          font: hindiBoldFont,
+                          font: containsHindiText(userName) ? hindiBoldFont : null,
                           fontSize: 44,
                           fontWeight: FontWeight.bold,
                           color: PdfColor(0.3, 0.15, 0.5), // Dark purple
