@@ -16,15 +16,46 @@ class CertificateGenerator {
     required String location,
     required String duration,
   }) async {
+    // Load Hindi font for Devanagari text support
+    Font hindiFont;
+    try {
+      final fontData = await rootBundle.load('assets/fonts/NotoSansDevanagari-Regular.ttf');
+      hindiFont = Font.ttf(fontData);
+    } catch (e) {
+      debugPrint('Error loading Hindi font: $e');
+      // Fallback to default font
+      rethrow;
+    }
+
+    Font hindiBoldFont;
+    try {
+      final boldFontData = await rootBundle.load('assets/fonts/NotoSansDevanagari-Bold.ttf');
+      hindiBoldFont = Font.ttf(boldFontData);
+    } catch (e) {
+      debugPrint('Error loading Hindi bold font: $e');
+      // Fallback to regular font
+      hindiBoldFont = hindiFont;
+    }
+
     final pdf = Document();
 
-    // Load the logo image from assets
+    // Load the Police Mitra logo image from assets
     MemoryImage? logoImage;
     try {
       final logoData = await rootBundle.load('assets/images/logo.png');
       logoImage = MemoryImage(logoData.buffer.asUint8List());
     } catch (e) {
-      debugPrint('Error loading logo: $e');
+      debugPrint('Error loading Police Mitra logo: $e');
+      // Logo will be null, and we'll use fallback
+    }
+
+    // Load the Thane Police logo image from assets
+    MemoryImage? thanePoliceLogoImage;
+    try {
+      final thaneLogoData = await rootBundle.load('assets/images/thanepolicelogo.jpg');
+      thanePoliceLogoImage = MemoryImage(thaneLogoData.buffer.asUint8List());
+    } catch (e) {
+      debugPrint('Error loading Thane Police logo: $e');
       // Logo will be null, and we'll use fallback
     }
 
@@ -75,49 +106,106 @@ class CertificateGenerator {
                   children: [
                     SizedBox(height: 30),
 
-                    // Police Mitra Logo
-                    if (logoImage != null)
-                      Image(
-                        logoImage,
-                        width: 100,
-                        height: 100,
-                      )
-                    else
-                      // Fallback if logo fails to load
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: PdfColor(0.4, 0.2, 0.6),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: PdfColor(0.8, 0.5, 0.0),
-                            width: 3,
+                    // Logos Row - Police Mitra and Thane Police logos side by side
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Police Mitra Logo
+                        if (logoImage != null)
+                          Image(
+                            logoImage,
+                            width: 100,
+                            height: 100,
+                          )
+                        else
+                          // Fallback if Police Mitra logo fails to load
+                          Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              color: PdfColor(0.4, 0.2, 0.6),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: PdfColor(0.8, 0.5, 0.0),
+                                width: 3,
+                              ),
+                            ),
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'ठाणे',
+                                    style: TextStyle(
+                                      font: hindiBoldFont,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: PdfColors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    'पोलीस',
+                                    style: TextStyle(
+                                      font: hindiBoldFont,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: PdfColors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                            Text(
-                              'ठाणे',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: PdfColors.white,
+
+                        SizedBox(width: 20),
+
+                        // Thane Police Logo
+                        if (thanePoliceLogoImage != null)
+                          Image(
+                            thanePoliceLogoImage,
+                            width: 100,
+                            height: 100,
+                          )
+                        else
+                          // Fallback if Thane Police logo fails to load
+                          Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              color: PdfColor(0.4, 0.2, 0.6),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: PdfColor(0.8, 0.5, 0.0),
+                                width: 3,
                               ),
                             ),
-                            Text(
-                              'पोलीस',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: PdfColors.white,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'ठाणे',
+                                    style: TextStyle(
+                                      font: hindiBoldFont,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: PdfColors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    'पोलीस',
+                                    style: TextStyle(
+                                      font: hindiBoldFont,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: PdfColors.white,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
+                      ],
                     ),
 
                     SizedBox(height: 20),
@@ -126,6 +214,7 @@ class CertificateGenerator {
                     Text(
                       'पोलीस मित्र ठाणे पोलीस',
                       style: TextStyle(
+                        font: hindiBoldFont,
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: PdfColor(0.4, 0.2, 0.6), // Purple
@@ -198,6 +287,7 @@ class CertificateGenerator {
                       child: Text(
                         userName.toUpperCase(),
                         style: TextStyle(
+                          font: hindiBoldFont,
                           fontSize: 44,
                           fontWeight: FontWeight.bold,
                           color: PdfColor(0.3, 0.15, 0.5), // Dark purple
@@ -270,6 +360,7 @@ class CertificateGenerator {
                                 Text(
                                   serviceName,
                                   style: TextStyle(
+                                    font: hindiBoldFont,
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                     color: PdfColor(0.2, 0.2, 0.2),
@@ -302,6 +393,7 @@ class CertificateGenerator {
                                     Text(
                                       participationArea,
                                       style: TextStyle(
+                                        font: hindiFont,
                                         fontSize: 16,
                                         // Map semi-bold (~w600) to bold for `package:pdf`.
                                         fontWeight: FontWeight.bold,
@@ -328,6 +420,7 @@ class CertificateGenerator {
                                     Text(
                                       location,
                                       style: TextStyle(
+                                        font: hindiFont,
                                         fontSize: 16,
                                         // Map semi-bold (~w600) to bold for `package:pdf`.
                                         fontWeight: FontWeight.bold,
@@ -363,6 +456,7 @@ class CertificateGenerator {
                                     Text(
                                       date,
                                       style: TextStyle(
+                                        font: hindiFont,
                                         fontSize: 16,
                                         // Map semi-bold (~w600) to bold for `package:pdf`.
                                         fontWeight: FontWeight.bold,
@@ -389,6 +483,7 @@ class CertificateGenerator {
                                     Text(
                                       duration,
                                       style: TextStyle(
+                                        font: hindiFont,
                                         fontSize: 16,
                                         // Map semi-bold (~w600) to bold for `package:pdf`.
                                         fontWeight: FontWeight.bold,
@@ -485,6 +580,7 @@ class CertificateGenerator {
                       child: Text(
                         'ठाणे पोलीस - सेवा नागरिक सुरक्षेची | Thane Police - Citizens\' Security',
                         style: TextStyle(
+                          font: hindiFont,
                           fontSize: 11,
                           color: PdfColors.white,
                           // Medium (~w500) isn't available in `package:pdf`; use normal.

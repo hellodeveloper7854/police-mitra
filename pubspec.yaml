@@ -134,6 +134,14 @@ flutter:
   assets:
     - assets/images/
     - assets/images/logo.png
+    - assets/fonts/
+
+  fonts:
+    - family: NotoSansDevanagari
+      fonts:
+        - asset: assets/fonts/NotoSansDevanagari-Regular.ttf
+        - asset: assets/fonts/NotoSansDevanagari-Bold.ttf
+          weight: 700
 
 # -------------------------
 # App Icon Configuration
