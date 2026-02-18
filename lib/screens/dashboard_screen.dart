@@ -6,6 +6,8 @@ import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/footer.dart';
 import '../widgets/notification_bell.dart';
+import '../widgets/notification_reply_popup.dart';
+import '../services/community_notification_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -24,6 +26,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _fetchAvailabilityStatus();
+    // Check for pending notifications after a short delay
+    Timer(const Duration(seconds: 2), () {
+      _checkPendingNotifications();
+    });
   }
 
   @override
@@ -85,6 +91,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
         });
       }
     });
+  }
+
+  // Check for pending notifications and show popup
+  Future<void> _checkPendingNotifications() async {
+    try {
+      print('🔍 Checking for pending notifications...');
+
+      final pendingNotifications =
+          await CommunityNotificationService().getPendingNotifications();
+
+      if (pendingNotifications.isNotEmpty) {
+        print('✅ Found ${pendingNotifications.length} pending notifications');
+
+        // Show the first pending notification
+        if (mounted) {
+          await showDialog(
+            context: context,
+            barrierDismissible: false, // Prevent closing by tapping outside
+            builder: (context) => NotificationReplyPopup(
+              notification: pendingNotifications.first,
+              onReplySubmitted: () {
+                // Check for more notifications after reply
+                _checkPendingNotifications();
+              },
+            ),
+          );
+        }
+      } else {
+        print('✅ No pending notifications found');
+      }
+    } catch (e) {
+      print('❌ Error checking pending notifications: $e');
+    }
   }
 
 
