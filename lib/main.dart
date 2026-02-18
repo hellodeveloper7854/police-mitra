@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/forgot_password_screen.dart';
@@ -23,9 +24,17 @@ import 'screens/feedback_history_screen.dart';
 import 'screens/settings_reset_password_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'services/fcm_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp();
+
+  // Initialize FCM Service
+  await FCMService().initialize();
+
   //production account
   // await Supabase.initialize(
   //   url: 'https://ifzbizgupmttuwlajwtb.supabase.co',
@@ -44,26 +53,99 @@ void main() async {
   if (session != null) {
     print('DEBUG: Session user: ${session.user?.email}');
     print('DEBUG: Session expires: ${session.expiresAt}');
+
+    // User is already logged in - update FCM token immediately
+    final userEmail = session.user?.email;
+    if (userEmail != null) {
+      print('🔐 User already logged in at startup: $userEmail');
+
+      // Save email to preferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_email', userEmail);
+      print('💾 User email saved to preferences at startup');
+
+      // Wait a moment for FCM to initialize, then update token
+      await Future.delayed(const Duration(seconds: 2));
+
+      final fcmToken = await FCMService().currentToken ?? await FCMService().getSavedToken();
+
+      if (fcmToken != null) {
+        print('📱 FCM token available at startup, updating database...');
+
+        try {
+          await Supabase.instance.client
+              .from('registrations')
+              .update({'fcm_token': fcmToken})
+              .eq('email', userEmail);
+
+          print('✅ FCM token updated in Supabase at startup for: $userEmail');
+
+          // Also send to backend API
+          await FCMService().sendTokenToBackend(userEmail, fcmToken);
+          print('✅ FCM token sent to backend API at startup');
+        } catch (e) {
+          print('⚠️ Error updating FCM token at startup: $e');
+        }
+      } else {
+        print('⚠️ No FCM token available at startup, will update when generated');
+      }
+    }
   }
 
   // Listen to auth state changes
-  Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+  Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
     final AuthChangeEvent event = data.event;
     final Session? session = data.session;
 
     print('DEBUG: Auth state changed: $event');
     print('DEBUG: Session is now: ${session != null ? 'EXISTS' : 'NULL'}');
 
-    // When session is lost, clear the stored email
+    // When user is signed in or token is refreshed, update FCM token
     if (event == AuthChangeEvent.tokenRefreshed ||
         event == AuthChangeEvent.signedIn ||
         event == AuthChangeEvent.userUpdated) {
       print('DEBUG: Auth event: $event - keeping user logged in');
+
+      // Get the user email from session
+      if (session?.user?.email != null) {
+        final userEmail = session!.user!.email!;
+        print('🔐 User authenticated: $userEmail');
+
+        // Save user email to preferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_email', userEmail);
+        print('💾 User email saved to preferences');
+
+        // Update FCM token for this user
+        final fcmToken = await FCMService().currentToken ?? await FCMService().getSavedToken();
+
+        if (fcmToken != null) {
+          print('📱 FCM token found, updating database...');
+
+          try {
+            // Update Supabase with FCM token
+            await Supabase.instance.client
+                .from('registrations')
+                .update({'fcm_token': fcmToken})
+                .eq('email', userEmail);
+
+            print('✅ FCM token updated in Supabase for: $userEmail');
+
+            // Also send to backend API
+            await FCMService().sendTokenToBackend(userEmail, fcmToken);
+            print('✅ FCM token sent to backend API');
+          } catch (e) {
+            print('⚠️ Error updating FCM token on auth change: $e');
+          }
+        } else {
+          print('⚠️ No FCM token available yet, will update when generated');
+        }
+      }
     } else if (event == AuthChangeEvent.signedOut) {
       print('DEBUG: User signed out - clearing stored email');
-      SharedPreferences.getInstance().then((prefs) {
-        prefs.remove('user_email');
-      });
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('user_email');
+      print('✅ User email cleared from preferences');
     }
   });
 

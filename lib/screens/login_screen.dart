@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/fcm_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -177,6 +178,33 @@ class _LoginScreenState extends State<LoginScreen> {
                             if (userCred != null) {
                               final prefs = await SharedPreferences.getInstance();
                               await prefs.setString('user_email', email);
+
+                              print('✅ Login successful for: $email');
+
+                              // Send FCM token to backend and Supabase
+                              print('📤 Calling FCM service...');
+                              final fcmToken = await FCMService().sendTokenOnLogin(email);
+
+                              print('📥 FCM Service returned token: ${fcmToken != null ? "YES (${fcmToken.length} chars)" : "NO"}');
+
+                              // Also update FCM token in Supabase registrations table
+                              if (fcmToken != null) {
+                                try {
+                                  print('💾 Updating Supabase with FCM token...');
+                                  final result = await Supabase.instance.client
+                                      .from('registrations')
+                                      .update({'fcm_token': fcmToken})
+                                      .eq('email', email);
+
+                                  print('✅ FCM token updated in Supabase successfully');
+                                  print('📊 Update result: $result');
+                                } catch (e) {
+                                  print('⚠️ Error updating FCM token in Supabase: $e');
+                                  print('   Stack trace: ${StackTrace.current}');
+                                }
+                              } else {
+                                print('⚠️ WARNING: FCM token is NULL, not updating Supabase');
+                              }
 
                               final user = await Supabase.instance.client
                                   .from('registrations')

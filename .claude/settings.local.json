@@ -10,7 +10,8 @@
       "Bash(flutter:*)",
       "Bash(dir assetsfonts 2)",
       "Bash(nul)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
