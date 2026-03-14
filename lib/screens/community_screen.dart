@@ -24,6 +24,9 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
   Map<String, List<Map<String, dynamic>>> _groupedResources = {};
   bool _isLoadingResources = true;
 
+  // Post filter: 'all' or 'my_posts'
+  String _postFilter = 'all';
+
   @override
   void initState() {
     super.initState();
@@ -55,15 +58,29 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
         _isLoadingPosts = true;
       });
 
+      // Build query based on filter
       final postsResponse = await Supabase.instance.client
           .from('community_posts')
           .select('*')
-          .eq('status', 'approved')
           .order('created_at', ascending: false);
 
-      final posts = List<Map<String, dynamic>>.from(postsResponse);
+      // Filter posts based on selection
+      List<Map<String, dynamic>> filteredPosts = List<Map<String, dynamic>>.from(postsResponse);
 
-      for (var post in posts) {
+      if (_postFilter == 'all') {
+        // Show only approved posts from all users
+        filteredPosts = filteredPosts.where((post) => post['status'] == 'approved').toList();
+      } else if (_postFilter == 'my_posts') {
+        // Show all posts (pending and approved) for current user
+        if (_currentUserEmail != null) {
+          filteredPosts = filteredPosts.where((post) => post['user_email'] == _currentUserEmail).toList();
+        } else {
+          filteredPosts = [];
+        }
+      }
+
+      // Fetch likes for each post
+      for (var post in filteredPosts) {
         final likesResponse = await Supabase.instance.client
             .from('post_likes')
             .select('id, user_email')
@@ -76,7 +93,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
       }
 
       setState(() {
-        _posts = posts;
+        _posts = filteredPosts;
         _isLoadingPosts = false;
       });
     } catch (e) {
@@ -157,10 +174,17 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Post submitted successfully! It will be visible after approval.'),
+            content: Text('Post submitted successfully! Check "My Posts" to see your post pending verification.'),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
           ),
         );
+
+        // Switch to 'my_posts' filter and refresh to show the new post
+        setState(() {
+          _postFilter = 'my_posts';
+        });
+        _fetchPosts();
       }
 
     } catch (e) {
@@ -221,6 +245,11 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     final createdAt = DateTime.parse(post['created_at']);
     final now = DateTime.now();
     final difference = now.difference(createdAt);
+
+    // Get post status
+    final status = post['status'] ?? 'pending';
+    final isPending = status == 'pending';
+    final isMyPost = _currentUserEmail != null && post['user_email'] == _currentUserEmail;
 
     String timeAgo;
     if (difference.inDays > 0) {
@@ -329,6 +358,69 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                             ),
                           ],
                         ),
+                        const SizedBox(height: 12),
+
+                        // Status message - only show for My Posts or if user owns the post
+                        if (_postFilter == 'my_posts' && isMyPost)
+                          isPending
+                              ? Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.orange.shade200),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.schedule,
+                                        size: 16,
+                                        color: Colors.orange.shade700,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Your post is pending verification by admin',
+                                          style: TextStyle(
+                                            color: Colors.orange.shade700,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.green.shade200),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.verified,
+                                        size: 16,
+                                        color: Colors.green.shade700,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Your post has been verified and is visible to everyone',
+                                          style: TextStyle(
+                                            color: Colors.green.shade700,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                         const SizedBox(height: 16),
 
                         // Title
@@ -931,15 +1023,113 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
             ),
             const SizedBox(height: 20),
 
+            // Filter buttons
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _postFilter = 'all';
+                        });
+                        _fetchPosts();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _postFilter == 'all' ? const Color(0xFF6B46C1) : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _postFilter == 'all' ? const Color(0xFF6B46C1) : Colors.grey.shade300,
+                          ),
+                        ),
+                        child: Text(
+                          'All Posts',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: _postFilter == 'all' ? Colors.white : Colors.black,
+                            fontWeight: _postFilter == 'all' ? FontWeight.bold : FontWeight.normal,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _postFilter = 'my_posts';
+                        });
+                        _fetchPosts();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _postFilter == 'my_posts' ? const Color(0xFF6B46C1) : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _postFilter == 'my_posts' ? const Color(0xFF6B46C1) : Colors.grey.shade300,
+                          ),
+                        ),
+                        child: Text(
+                          'My Posts',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: _postFilter == 'my_posts' ? Colors.white : Colors.black,
+                            fontWeight: _postFilter == 'my_posts' ? FontWeight.bold : FontWeight.normal,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
             if (_isLoadingPosts)
               const Center(child: CircularProgressIndicator())
             else if (_posts.isEmpty)
-              const Center(
+              Center(
                 child: Padding(
-                  padding: EdgeInsets.all(40.0),
-                  child: Text(
-                    'No posts yet. Be the first to share!',
-                    style: TextStyle(color: Colors.grey),
+                  padding: const EdgeInsets.all(40.0),
+                  child: Column(
+                    children: [
+                      Icon(
+                        _postFilter == 'my_posts' ? Icons.post_add : Icons.feed_outlined,
+                        size: 64,
+                        color: Colors.grey.shade400,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _postFilter == 'my_posts'
+                            ? 'You haven\'t created any posts yet'
+                            : 'No posts yet. Be the first to share!',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 16,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      if (_postFilter == 'all')
+                        Text(
+                          'Tap "Create post" button to share with the community',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 14,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               )
@@ -961,6 +1151,11 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     final createdAt = DateTime.parse(post['created_at']);
     final now = DateTime.now();
     final difference = now.difference(createdAt);
+
+    // Get post status
+    final status = post['status'] ?? 'pending';
+    final isPending = status == 'pending';
+    final isMyPost = _currentUserEmail != null && post['user_email'] == _currentUserEmail;
 
     String timeAgo;
     if (difference.inDays > 0) {
@@ -991,38 +1186,115 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // User info and tags row
+            // User info, status badge, and tags row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '$username • $timeAgo',
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 13,
-                  ),
-                ),
-                Row(
-                  children: tags.map((tag) {
-                    return Container(
-                      margin: const EdgeInsets.only(left: 6),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6B46C1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '#$tag',
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        username,
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                         ),
                       ),
-                    );
-                  }).toList(),
+                      Text(
+                        timeAgo,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                // Status badge - only show on My Posts filter
+                if (_postFilter == 'my_posts' && isMyPost)
+                  isPending
+                      ? Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.orange.shade300),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.schedule,
+                                size: 14,
+                                color: Colors.orange.shade700,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Pending',
+                                style: TextStyle(
+                                  color: Colors.orange.shade700,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.green.shade300),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.verified,
+                                size: 14,
+                                color: Colors.green.shade700,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Verified',
+                                style: TextStyle(
+                                  color: Colors.green.shade700,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
               ],
             ),
+
+            // Hashtags row
+            if (tags.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                children: tags.map((tag) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6B46C1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '#$tag',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
             const SizedBox(height: 12),
 
             // Two column layout for content and image
