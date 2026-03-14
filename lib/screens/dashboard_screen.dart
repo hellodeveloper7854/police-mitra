@@ -8,6 +8,7 @@ import '../widgets/footer.dart';
 import '../widgets/notification_bell.dart';
 import '../widgets/notification_reply_popup.dart';
 import '../services/community_notification_service.dart';
+import '../services/fcm_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -26,6 +27,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _fetchAvailabilityStatus();
+    _updateFCMToken(); // Add FCM token refresh
     // Check for pending notifications after a short delay
     Timer(const Duration(seconds: 2), () {
       _checkPendingNotifications();
@@ -79,6 +81,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _isAvailable = false;
         _elapsedTime = Duration.zero;
       });
+    }
+  }
+
+  // Update FCM token when dashboard is opened
+  Future<void> _updateFCMToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('user_email');
+
+      if (email == null) {
+        print('⚠️ No user email found for FCM token update');
+        return;
+      }
+
+      print('📱 Dashboard opened - Updating FCM token for: $email');
+
+      // Get current FCM token
+      final fcmToken = FCMService().currentToken ?? await FCMService().getSavedToken();
+
+      if (fcmToken != null) {
+        print('✅ FCM token found, updating database...');
+
+        // Update FCM token in Supabase
+        try {
+          await Supabase.instance.client
+              .from('registrations')
+              .update({'fcm_token': fcmToken})
+              .eq('email', email);
+
+          print('✅ FCM token updated successfully in Supabase');
+        } catch (e) {
+          print('⚠️ Failed to update FCM token in Supabase: $e');
+        }
+      } else {
+        print('⚠️ No FCM token available yet');
+      }
+    } catch (e) {
+      print('❌ Error updating FCM token in dashboard: $e');
     }
   }
 
