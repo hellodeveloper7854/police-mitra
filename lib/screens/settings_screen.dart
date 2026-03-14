@@ -109,6 +109,17 @@ class SettingsScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   _buildOptionCard(
                     context,
+                    'My Certificates',
+                    'View and download your service certificates',
+                    Icons.card_membership,
+                    const LinearGradient(
+                      colors: [Color(0xFFa8edea), Color(0xFFfed6e3)],
+                    ),
+                    () => context.push('/certificates'),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildOptionCard(
+                    context,
                     'Feedback',
                     'Share your experience with us',
                     Icons.star_outline,
@@ -128,7 +139,7 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     () => context.push('/settings-reset-password'),
                   ),
-                  
+
                 ],
               ),
             ),

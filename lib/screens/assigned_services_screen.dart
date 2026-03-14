@@ -932,27 +932,6 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
                   ],
                 ),
               ],
-
-              // Certificate Download Button for Completed Services
-              if (!isTodayService && !isUpcomingService && service['end_time'] != null) ...[
-                const SizedBox(width: 12),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () => _downloadCertificate(service),
-                      icon: const Icon(Icons.download, size: 16),
-                      label: const Text('Certificate'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6B46C1),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
             ],
           ),
           if (isTodayService || isUpcomingService) ...[
