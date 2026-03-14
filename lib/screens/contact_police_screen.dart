@@ -13,8 +13,8 @@ class ContactPoliceScreen extends StatefulWidget {
 }
 
 class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
-  String? policeStation;
   List<Map<String, dynamic>> contacts = [];
+  Map<String, List<Map<String, dynamic>>> contactsByStation = {};
   bool isLoading = true;
   String? error;
 
@@ -26,39 +26,30 @@ class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
 
   Future<void> _fetchData() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final email = prefs.getString('user_email');
-      if (email == null) {
-        setState(() => error = 'User not logged in');
-        return;
-      }
-
-      final reg = await Supabase.instance.client
-          .from('registrations')
-          .select('police_station')
-          .eq('email', email)
-          .maybeSingle();
-
-      if (reg == null) {
-        setState(() => error = 'User registration not found');
-        return;
-      }
-
-      final station = reg['police_station'] as String?;
-      if (station == null) {
-        setState(() => error = 'Police station not found');
-        return;
-      }
-
-      setState(() => policeStation = station);
-
+      // Fetch ALL station contacts (not filtered by user's station)
       final contactsData = await Supabase.instance.client
           .from('station_contacts')
           .select('*')
-          .eq('police_station', policeStation!);
+          .order('police_station', ascending: true);
 
-      setState(() => contacts = List<Map<String, dynamic>>.from(contactsData));
+      // Group contacts by police station
+      final Map<String, List<Map<String, dynamic>>> grouped = {};
+      for (var contact in contactsData) {
+        if (contact is Map<String, dynamic>) {
+          final station = contact['police_station']?.toString() ?? 'Unknown Station';
+          if (!grouped.containsKey(station)) {
+            grouped[station] = [];
+          }
+          grouped[station]!.add(Map<String, dynamic>.from(contact));
+        }
+      }
+
+      setState(() {
+        contacts = List<Map<String, dynamic>>.from(contactsData);
+        contactsByStation = grouped;
+      });
     } catch (e) {
+      print('Error fetching station contacts: $e');
       setState(() => error = e.toString());
     } finally {
       setState(() => isLoading = false);
@@ -173,7 +164,7 @@ class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
 
               // Title
               const Text(
-                'Police Station',
+                'All Police Stations',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -181,7 +172,7 @@ class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
                 ),
               ),
               const Text(
-                'Contact',
+                'Contact Directory',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -190,28 +181,7 @@ class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
               ),
               const SizedBox(height: 30),
 
-              // Station Name
-              if (isLoading)
-                const Center(child: CircularProgressIndicator())
-              else if (error != null)
-                Center(
-                  child: Text(
-                    'Error: $error',
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                )
-              else
-                Text(
-                  policeStation ?? 'Unknown Station',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-              const SizedBox(height: 20),
-
-              // Police Officers List
+              // Police Officers List (Grouped by Station)
               Expanded(
                 child: isLoading
                     ? const Center(child: CircularProgressIndicator())
@@ -222,10 +192,10 @@ class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
                               style: const TextStyle(color: Colors.red),
                             ),
                           )
-                        : contacts.isEmpty
+                        : contactsByStation.isEmpty
                             ? const Center(
                                 child: Text(
-                                  'Data is not existing',
+                                  'No station contacts available',
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: Colors.black54,
@@ -233,13 +203,42 @@ class _ContactPoliceScreenState extends State<ContactPoliceScreen> {
                                 ),
                               )
                             : ListView.builder(
-                                itemCount: contacts.length,
+                                itemCount: contactsByStation.length,
                                 itemBuilder: (context, index) {
-                                  final contact = contacts[index];
+                                  final stationName = contactsByStation.keys.elementAt(index);
+                                  final stationContacts = contactsByStation[stationName]!;
+
                                   return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      _buildOfficerCard(contact),
-                                      const SizedBox(height: 12),
+                                      // Station Header
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        child: Text(
+                                          stationName,
+                                          style: const TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF6B46C1),
+                                          ),
+                                        ),
+                                      ),
+                                      // Contacts for this station
+                                      ...stationContacts.map((contact) {
+                                        return Column(
+                                          children: [
+                                            _buildOfficerCard(contact),
+                                            const SizedBox(height: 12),
+                                          ],
+                                        );
+                                      }).toList(),
+                                      const SizedBox(height: 20),
+                                      // Divider between stations
+                                      if (index < contactsByStation.length - 1)
+                                        Divider(
+                                          color: Colors.grey[300],
+                                          thickness: 1,
+                                        ),
                                     ],
                                   );
                                 },
