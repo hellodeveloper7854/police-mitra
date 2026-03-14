@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import '../widgets/footer.dart';
 import '../widgets/notification_bell.dart';
@@ -223,10 +224,42 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
   Future<void> _sharePost(Map<String, dynamic> post) async {
     final title = post['title'] ?? '';
     final content = post['content'] ?? '';
+    final imageUrl = post['image_url'];
     final shareText = '$title\n\n$content\n\nShared from Police Mitra Community';
 
     try {
-      await Share.share(shareText, subject: title);
+      // Check if post has an image
+      if (imageUrl != null && imageUrl.toString().isNotEmpty) {
+        // Mobile platforms (Android/iOS) - Share image with text
+        if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+          try {
+            // Download image to temporary file
+            final imageFile = await _downloadImage(imageUrl.toString());
+
+            if (imageFile != null) {
+              // Share image with text
+              await Share.shareXFiles(
+                [XFile(imageFile.path, name: 'community_post.jpg')],
+                text: shareText,
+                subject: title,
+              );
+            } else {
+              // Fallback to text-only if image download fails
+              await Share.share(shareText, subject: title);
+            }
+          } catch (e) {
+            print('Error sharing image: $e');
+            // Fallback to text-only if image sharing fails
+            await Share.share(shareText, subject: title);
+          }
+        } else {
+          // Web platform - Share text only (browsers have limited sharing capabilities)
+          await Share.share(shareText, subject: title);
+        }
+      } else {
+        // No image - Share text only
+        await Share.share(shareText, subject: title);
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -237,6 +270,35 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
           ),
         );
       }
+    }
+  }
+
+  Future<File?> _downloadImage(String imageUrl) async {
+    try {
+      // Get temporary directory
+      final tempDir = await getTemporaryDirectory();
+
+      // Generate unique filename
+      final filename = 'community_post_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final filePath = '${tempDir.path}/$filename';
+
+      // Download image using HttpClient
+      final httpClient = HttpClient();
+      final request = await httpClient.getUrl(Uri.parse(imageUrl));
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final bytes = await consolidateHttpClientResponseBytes(response);
+        final file = File(filePath);
+        await file.writeAsBytes(bytes);
+        return file;
+      } else {
+        print('Failed to download image: Status ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error downloading image: $e');
+      return null;
     }
   }
 
