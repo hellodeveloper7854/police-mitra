@@ -4,6 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../widgets/footer.dart';
+import '../services/community_notification_service.dart';
+import '../widgets/notification_reply_popup.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -72,20 +74,42 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return;
       }
 
-      final response = await Supabase.instance.client
+      // Fetch regular notifications
+      final regularResponse = await Supabase.instance.client
           .from('notifications')
           .select('*')
           .eq('user_email', email)
           .order('created_at', ascending: false);
 
-      final notifications = List<Map<String, dynamic>>.from(response);
+      final regularNotifications = List<Map<String, dynamic>>.from(regularResponse);
+
+      // Fetch pending notifications
+      final pendingNotifications = await CommunityNotificationService().getPendingNotifications();
+
+      // Convert pending notifications to match the expected format
+      final formattedPendingNotifications = pendingNotifications.map((pending) {
+        return {
+          'id': pending['id'].toString(),
+          'user_email': email,
+          'type': 'pending_reply',
+          'title': pending['title'] as String? ?? 'Pending Reply',
+          'message': pending['body'] as String? ?? '',
+          'is_read': false, // Pending notifications are considered unread
+          'created_at': pending['sent_at'] ?? DateTime.now().toIso8601String(),
+          'updated_at': pending['sent_at'] ?? DateTime.now().toIso8601String(),
+        };
+      }).toList();
+
+      // Combine and sort by created_at descending
+      final allNotifications = [...regularNotifications, ...formattedPendingNotifications]
+        ..sort((a, b) => (b['created_at'] as String).compareTo(a['created_at'] as String));
 
       setState(() {
-        _notifications = notifications;
+        _notifications = allNotifications;
         _isLoading = false;
       });
 
-      // Mark all as read when fetched
+      // Mark all regular notifications as read when fetched
       await _markAllAsRead(email);
     } catch (e) {
       print('Error fetching notifications: $e');
@@ -169,9 +193,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   String _formatTimestamp(String timestamp) {
-    final dateTime = DateTime.parse(timestamp);
+    // Parse the timestamp (assuming it's in UTC)
+    final dateTime = DateTime.parse(timestamp).toUtc();
+    // Convert to IST (UTC+5:30)
+    final istTime = dateTime.add(const Duration(hours: 5, minutes: 30));
     final now = DateTime.now();
-    final difference = now.difference(dateTime);
+    final difference = now.difference(istTime);
 
     if (difference.inMinutes < 1) {
       return 'Just now';
@@ -182,7 +209,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     } else if (difference.inDays < 7) {
       return '${difference.inDays}d ago';
     } else {
-      return DateFormat('dd MMM yyyy').format(dateTime);
+      // Show actual time in IST format
+      return DateFormat('hh:mm a').format(istTime);
     }
   }
 
@@ -290,93 +318,101 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         final isRead = notification['is_read'] as bool? ?? false;
 
                         return Dismissible(
-                          key: Key(notification['id'].toString()),
-                          onDismissed: (direction) {
-                            _deleteNotification(notification['id'].toString());
-                          },
-                          background: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 20),
-                            child: const Icon(
-                              Icons.delete,
-                              color: Colors.white,
-                            ),
-                          ),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: isRead ? Colors.white : Colors.blue.shade50,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: isRead ? Colors.grey.shade300 : Colors.blue.shade200,
-                                width: isRead ? 1 : 2,
-                              ),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: _getNotificationColor(type).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    _getNotificationIcon(type),
-                                    color: _getNotificationColor(type),
-                                    size: 24,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        notification['title'] as String? ?? 'Notification',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: isRead ? Colors.grey.shade700 : Colors.black,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        notification['message'] as String? ?? '',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey.shade700,
-                                          height: 1.4,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        _formatTimestamp(notification['created_at'] as String? ?? ''),
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (!isRead)
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.blue,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        );
+                           key: Key(notification['id'].toString()),
+                           onDismissed: (direction) {
+                             _deleteNotification(notification['id'].toString());
+                           },
+                           background: Container(
+                             decoration: BoxDecoration(
+                               color: Colors.red,
+                               borderRadius: BorderRadius.circular(12),
+                             ),
+                             alignment: Alignment.centerRight,
+                             padding: const EdgeInsets.only(right: 20),
+                             child: const Icon(
+                               Icons.delete,
+                               color: Colors.white,
+                             ),
+                           ),
+                           child: ListTile(
+                             onTap: () {
+                               // Show popup for pending notifications that require replies
+                               if (type == 'pending_reply') {
+                                 showDialog(
+                                   context: context,
+                                   barrierDismissible: false, // Prevent closing by tapping outside
+                                   builder: (context) => NotificationReplyPopup(
+                                     notification: notification,
+                                     onReplySubmitted: () {
+                                       // Refresh notifications after reply is submitted
+                                       _fetchNotifications();
+                                     },
+                                   ),
+                                 );
+                               }
+                             },
+                             contentPadding: const EdgeInsets.all(16),
+                             title: Row(
+                               crossAxisAlignment: CrossAxisAlignment.start,
+                               children: [
+                                 Container(
+                                   padding: const EdgeInsets.all(12),
+                                   decoration: BoxDecoration(
+                                     color: _getNotificationColor(type).withOpacity(0.1),
+                                     borderRadius: BorderRadius.circular(12),
+                                   ),
+                                   child: Icon(
+                                     _getNotificationIcon(type),
+                                     color: _getNotificationColor(type),
+                                     size: 24,
+                                   ),
+                                 ),
+                                 const SizedBox(width: 16),
+                                 Expanded(
+                                   child: Column(
+                                     crossAxisAlignment: CrossAxisAlignment.start,
+                                     children: [
+                                       Text(
+                                         notification['title'] as String? ?? 'Notification',
+                                         style: TextStyle(
+                                           fontSize: 16,
+                                           fontWeight: FontWeight.bold,
+                                           color: isRead ? Colors.grey.shade700 : Colors.black,
+                                         ),
+                                       ),
+                                       const SizedBox(height: 4),
+                                       Text(
+                                         notification['message'] as String? ?? '',
+                                         style: TextStyle(
+                                           fontSize: 14,
+                                           color: Colors.grey.shade700,
+                                           height: 1.4,
+                                         ),
+                                       ),
+                                       const SizedBox(height: 8),
+                                       Text(
+                                         _formatTimestamp(notification['created_at'] as String? ?? ''),
+                                         style: TextStyle(
+                                           fontSize: 12,
+                                           color: Colors.grey.shade500,
+                                         ),
+                                       ),
+                                     ],
+                                   ),
+                                 ),
+                                 if (!isRead)
+                                   Container(
+                                     width: 8,
+                                     height: 8,
+                                     decoration: const BoxDecoration(
+                                       color: Colors.blue,
+                                       shape: BoxShape.circle,
+                                     ),
+                                   ),
+                               ],
+                             ),
+                           ),
+                         );
                       },
                     ),
                   ),

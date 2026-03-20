@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/community_notification_service.dart';
 
 class NotificationBell extends StatefulWidget {
   final Color iconColor;
@@ -31,17 +32,25 @@ class _NotificationBellState extends State<NotificationBell> {
 
       if (email == null) return;
 
-      final response = await Supabase.instance.client
+      // Count unread regular notifications
+      final regularResponse = await Supabase.instance.client
           .from('notifications')
           .select('id')
           .eq('user_email', email)
           .eq('is_read', false);
 
-      final count = response.length;
+      int regularCount = regularResponse.length;
+
+      // Count pending notifications that require replies
+      final pendingNotifications = await CommunityNotificationService().getPendingNotifications();
+      int pendingCount = pendingNotifications.length;
+
+      // Total unread count
+      final totalCount = regularCount + pendingCount;
 
       if (mounted) {
         setState(() {
-          _unreadCount = count;
+          _unreadCount = totalCount;
         });
       }
     } catch (e) {
