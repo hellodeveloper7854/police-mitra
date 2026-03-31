@@ -6,6 +6,7 @@ import 'package:open_filex/open_filex.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
 
 class CertificateGenerator {
   static Future<void> generateAndDownloadCertificate({
@@ -225,19 +226,19 @@ class CertificateGenerator {
                       ],
                     ),
 
-                    SizedBox(height: 20),
+                    // SizedBox(height: 20),
 
-                    // App Name
-                    Text(
-                      'पोलीस मित्र ठाणे पोलीस',
-                      style: TextStyle(
-                        font: hindiBoldFont,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: PdfColor(0.4, 0.2, 0.6), // Purple
-                        letterSpacing: 1,
-                      ),
-                    ),
+                    // // App Name
+                    // Text(
+                    //   'पोलीस मित्र ठाणे पोलीस',
+                    //   style: TextStyle(
+                    //     font: hindiBoldFont,
+                    //     fontSize: 24,
+                    //     fontWeight: FontWeight.bold,
+                    //     color: PdfColor(0.4, 0.2, 0.6), // Purple
+                    //     letterSpacing: 0, // No spacing for proper Marathi ligature rendering
+                    //   ),
+                    // ),
 
                     SizedBox(height: 10),
 
@@ -602,7 +603,7 @@ class CertificateGenerator {
                           color: PdfColors.white,
                           // Medium (~w500) isn't available in `package:pdf`; use normal.
                           fontWeight: FontWeight.normal,
-                          letterSpacing: 1,
+                          letterSpacing: 0.5, // Reduced spacing for Marathi text
                         ),
                       ),
                     ),
