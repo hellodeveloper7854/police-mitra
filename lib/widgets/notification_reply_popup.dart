@@ -54,8 +54,26 @@ class _NotificationReplyPopupState extends State<NotificationReplyPopup> {
         return;
       }
 
+      // Convert notification ID to int (it might be stored as string)
+      final notificationId = widget.notification['id'] is String
+          ? int.tryParse(widget.notification['id'])
+          : widget.notification['id'] as int?;
+
+      if (notificationId == null) {
+        setState(() {
+          _errorMessage = 'Invalid notification ID';
+          _isSubmitting = false;
+        });
+        return;
+      }
+
+      if (mounted) {
+        print('📝 Submitting reply for notification ID: $notificationId');
+        print('📝 Reply text: $replyText');
+      }
+
       final success = await CommunityNotificationService().submitReply(
-        notificationId: widget.notification['id'],
+        notificationId: notificationId,
         replyText: replyText,
       );
 
@@ -75,16 +93,22 @@ class _NotificationReplyPopupState extends State<NotificationReplyPopup> {
           widget.onReplySubmitted?.call();
         }
       } else {
+        if (mounted) {
+          print('❌ Submit reply returned false');
+          setState(() {
+            _errorMessage = 'Failed to submit reply. You may have already replied to this notification.';
+            _isSubmitting = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        print('❌ Exception during submit reply: $e');
         setState(() {
-          _errorMessage = 'Failed to submit reply. Please try again.';
+          _errorMessage = 'An error occurred: $e';
           _isSubmitting = false;
         });
       }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'An error occurred. Please try again.';
-        _isSubmitting = false;
-      });
     }
   }
 
@@ -129,21 +153,11 @@ class _NotificationReplyPopupState extends State<NotificationReplyPopup> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  widget.notification['body'] ?? '',
+                  widget.notification['message'] ?? widget.notification['body'] ?? 'No message content',
                   style: const TextStyle(
                     fontSize: 15,
                     height: 1.5,
                   ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Timestamp
-              Text(
-                'Sent: ${_formatDate(widget.notification['sent_at'])}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
                 ),
               ),
               const SizedBox(height: 20),
@@ -227,21 +241,5 @@ class _NotificationReplyPopupState extends State<NotificationReplyPopup> {
         ],
       ),
     );
-  }
-
-  String _formatDate(dynamic date) {
-    if (date == null) return 'Unknown';
-
-    DateTime dateTime;
-    if (date is String) {
-      dateTime = DateTime.parse(date);
-    } else if (date is DateTime) {
-      dateTime = date;
-    } else {
-      return 'Unknown';
-    }
-
-    return '${dateTime.day}/${dateTime.month}/${dateTime.year} '
-        '${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 }

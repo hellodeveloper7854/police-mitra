@@ -975,7 +975,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
             onPressed: _onBackPressed,
           ),
           actions: [
-            const NotificationBell(iconColor: Colors.black),
+            const NotificationBell(iconColor: Colors.black, includeCommunityNotifications: true),
             Padding(
               padding: const EdgeInsets.only(right: 12.0),
               child: Image.asset(

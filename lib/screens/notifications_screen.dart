@@ -17,11 +17,25 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _notifications = [];
+  bool _includeCommunityNotifications = false;
 
   @override
   void initState() {
     super.initState();
-    _fetchNotifications();
+    // Don't fetch in initState, wait for didChangeDependencies
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Check if we should include community notifications
+    final newIncludeCommunity = GoRouterState.of(context).uri.queryParameters['includeCommunity'] == 'true';
+
+    // Only refetch if the flag has changed or it's the first time
+    if (_includeCommunityNotifications != newIncludeCommunity || _notifications.isEmpty) {
+      _includeCommunityNotifications = newIncludeCommunity;
+      _fetchNotifications();
+    }
   }
 
   Future<void> _onBackPressed() async {
@@ -83,22 +97,26 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
       final regularNotifications = List<Map<String, dynamic>>.from(regularResponse);
 
-      // Fetch pending notifications
-      final pendingNotifications = await CommunityNotificationService().getPendingNotifications();
+      // Only fetch pending notifications if includeCommunityNotifications is true
+      List<Map<String, dynamic>> formattedPendingNotifications = [];
 
-      // Convert pending notifications to match the expected format
-      final formattedPendingNotifications = pendingNotifications.map((pending) {
-        return {
-          'id': pending['id'].toString(),
-          'user_email': email,
-          'type': 'pending_reply',
-          'title': pending['title'] as String? ?? 'Pending Reply',
-          'message': pending['body'] as String? ?? '',
-          'is_read': false, // Pending notifications are considered unread
-          'created_at': pending['sent_at'] ?? DateTime.now().toIso8601String(),
-          'updated_at': pending['sent_at'] ?? DateTime.now().toIso8601String(),
-        };
-      }).toList();
+      if (_includeCommunityNotifications) {
+        final pendingNotifications = await CommunityNotificationService().getPendingNotifications();
+
+        // Convert pending notifications to match the expected format
+        formattedPendingNotifications = pendingNotifications.map((pending) {
+          return {
+            'id': pending['id'].toString(),
+            'user_email': email,
+            'type': 'pending_reply',
+            'title': pending['title'] as String? ?? 'Pending Reply',
+            'message': pending['body'] as String? ?? '',
+            'is_read': false, // Pending notifications are considered unread
+            'created_at': pending['sent_at'] ?? DateTime.now().toIso8601String(),
+            'updated_at': pending['sent_at'] ?? DateTime.now().toIso8601String(),
+          };
+        }).toList();
+      }
 
       // Combine and sort by created_at descending
       final allNotifications = [...regularNotifications, ...formattedPendingNotifications]

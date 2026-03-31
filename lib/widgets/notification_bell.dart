@@ -6,10 +6,12 @@ import '../services/community_notification_service.dart';
 
 class NotificationBell extends StatefulWidget {
   final Color iconColor;
+  final bool includeCommunityNotifications;
 
   const NotificationBell({
     super.key,
     this.iconColor = Colors.black,
+    this.includeCommunityNotifications = false,
   });
 
   @override
@@ -41,9 +43,13 @@ class _NotificationBellState extends State<NotificationBell> {
 
       int regularCount = regularResponse.length;
 
-      // Count pending notifications that require replies
-      final pendingNotifications = await CommunityNotificationService().getPendingNotifications();
-      int pendingCount = pendingNotifications.length;
+      int pendingCount = 0;
+
+      // Only count pending notifications if includeCommunityNotifications is true
+      if (widget.includeCommunityNotifications) {
+        final pendingNotifications = await CommunityNotificationService().getPendingNotifications();
+        pendingCount = pendingNotifications.length;
+      }
 
       // Total unread count
       final totalCount = regularCount + pendingCount;
@@ -66,8 +72,8 @@ class _NotificationBellState extends State<NotificationBell> {
           icon: const Icon(Icons.notifications_outlined),
           color: widget.iconColor,
           onPressed: () async {
-            // Navigate to notifications screen
-            context.push('/notifications');
+            // Navigate to notifications screen with flag
+            context.push('/notifications?includeCommunity=${widget.includeCommunityNotifications}');
             // Refresh count after viewing
             await Future.delayed(const Duration(milliseconds: 500));
             _fetchUnreadCount();
