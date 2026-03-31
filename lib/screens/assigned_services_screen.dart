@@ -27,8 +27,8 @@ class _AssignedServicesScreenState extends State<AssignedServicesScreen> {
   }
 
   Future<void> _onBackPressed() async {
-    // Navigate back to settings (Account page) instead of dashboard
-    context.push('/settings');
+    // Navigate back to the previous screen (could be dashboard or settings)
+    context.pop();
   }
 
   Future<void> _startService(String serviceId) async {
