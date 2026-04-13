@@ -311,7 +311,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         actions: [
-          const NotificationBell(includeCommunityNotifications: false),
+          const NotificationBell(includeCommunityNotifications: true),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => context.push('/settings'),
