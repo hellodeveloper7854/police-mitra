@@ -585,81 +585,82 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                         Divider(color: Colors.grey.shade300),
                         const SizedBox(height: 16),
 
-                        // Action buttons row
-                        Row(
-                          children: [
-                            // Like button
-                            GestureDetector(
-                              onTap: () {
-                                _toggleLike(post['id'], isLiked);
-                                Navigator.of(context).pop();
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: isLiked ? const Color(0xFF6B46C1).withOpacity(0.1) : Colors.grey.shade100,
-                                  borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(
-                                    color: isLiked ? const Color(0xFF6B46C1) : Colors.grey.shade300,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
-                                      size: 20,
-                                      color: isLiked ? const Color(0xFF6B46C1) : Colors.grey.shade600,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      '$likesCount',
-                                      style: TextStyle(
-                                        color: isLiked ? const Color(0xFF6B46C1) : Colors.grey.shade700,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(width: 12),
-
-                            // Share button
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => _sharePost(post),
+                        // Action buttons row - only show for approved posts
+                        if (status == 'approved')
+                          Row(
+                            children: [
+                              // Like button
+                              GestureDetector(
+                                onTap: () {
+                                  _toggleLike(post['id'], isLiked);
+                                  Navigator.of(context).pop();
+                                },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF5C563),
+                                    color: isLiked ? const Color(0xFF6B46C1).withOpacity(0.1) : Colors.grey.shade100,
                                     borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: isLiked ? const Color(0xFF6B46C1) : Colors.grey.shade300,
+                                    ),
                                   ),
-                                  child: const Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                                  child: Row(
                                     children: [
                                       Icon(
-                                        Icons.share_outlined,
+                                        isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
                                         size: 20,
-                                        color: Colors.black,
+                                        color: isLiked ? const Color(0xFF6B46C1) : Colors.grey.shade600,
                                       ),
-                                      SizedBox(width: 8),
+                                      const SizedBox(width: 8),
                                       Text(
-                                        'Share Post',
+                                        '$likesCount',
                                         style: TextStyle(
-                                          color: Colors.black,
+                                          color: isLiked ? const Color(0xFF6B46C1) : Colors.grey.shade700,
                                           fontSize: 14,
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w500,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
+
+                              const SizedBox(width: 12),
+
+                              // Share button
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () => _sharePost(post),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF5C563),
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
+                                    child: const Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.share_outlined,
+                                          size: 20,
+                                          color: Colors.black,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          'Share Post',
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ),
@@ -1393,24 +1394,30 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                       ),
                       const SizedBox(height: 12),
 
-                      // Like count
-                      Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () => _toggleLike(post['id'], isLiked),
-                            child: Icon(
-                              isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
-                              size: 18,
-                              color: isLiked ? const Color(0xFF6B46C1) : Colors.grey.shade600,
+                      // Like count and share button - only show for approved posts
+                      if (status == 'approved')
+                        Column(
+                          children: [
+                            // Like count
+                            Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () => _toggleLike(post['id'], isLiked),
+                                  child: Icon(
+                                    isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
+                                    size: 18,
+                                    color: isLiked ? const Color(0xFF6B46C1) : Colors.grey.shade600,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '$likesCount',
+                                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '$likesCount',
-                            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
                     ],
                   ),
                 ),
@@ -1467,22 +1474,23 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                       if (post['image_url'] != null && post['image_url'].toString().isNotEmpty)
                         const SizedBox(height: 8),
 
-                      // Share button - icon only
-                      GestureDetector(
-                        onTap: () => _sharePost(post),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Icon(
-                            Icons.share_outlined,
-                            size: 18,
-                            color: Colors.grey,
+                      // Share button - icon only, only show for approved posts
+                      if (status == 'approved')
+                        GestureDetector(
+                          onTap: () => _sharePost(post),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade300),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Icon(
+                              Icons.share_outlined,
+                              size: 18,
+                              color: Colors.grey,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),
