@@ -69,10 +69,10 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
       List<Map<String, dynamic>> filteredPosts = List<Map<String, dynamic>>.from(postsResponse);
 
       if (_postFilter == 'all') {
-        // Show only approved posts from all users
-        filteredPosts = filteredPosts.where((post) => post['status'] == 'approved').toList();
+        // Show only verified posts from all users
+        filteredPosts = filteredPosts.where((post) => post['status'] == 'verified').toList();
       } else if (_postFilter == 'my_posts') {
-        // Show all posts (pending and approved) for current user
+        // Show all posts (pending and verified) for current user
         if (_currentUserEmail != null) {
           filteredPosts = filteredPosts.where((post) => post['user_email'] == _currentUserEmail).toList();
         } else {
@@ -308,9 +308,10 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     final now = DateTime.now();
     final difference = now.difference(createdAt);
 
-    // Get post status
-    final status = post['status'] ?? 'pending';
+    // Get post status - normalize to lowercase and trim
+    final status = (post['status'] ?? 'pending').toString().toLowerCase().trim();
     final isPending = status == 'pending';
+    final isApproved = status == 'verified';
     final isMyPost = _currentUserEmail != null && post['user_email'] == _currentUserEmail;
 
     String timeAgo;
@@ -586,7 +587,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                         const SizedBox(height: 16),
 
                         // Action buttons row - only show for approved posts
-                        if (status == 'approved')
+                        if (isApproved)
                           Row(
                             children: [
                               // Like button
@@ -1259,9 +1260,10 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     final now = DateTime.now();
     final difference = now.difference(createdAt);
 
-    // Get post status
-    final status = post['status'] ?? 'pending';
+    // Get post status - normalize to lowercase and trim
+    final status = (post['status'] ?? 'pending').toString().toLowerCase().trim();
     final isPending = status == 'pending';
+    final isApproved = status == 'verified';
     final isMyPost = _currentUserEmail != null && post['user_email'] == _currentUserEmail;
 
     String timeAgo;
@@ -1439,7 +1441,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                       const SizedBox(height: 12),
 
                       // Like count and share button - only show for approved posts
-                      if (status == 'approved')
+                      if (isApproved)
                         Column(
                           children: [
                             // Like count
@@ -1519,7 +1521,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                         const SizedBox(height: 8),
 
                       // Share button - icon only, only show for approved posts
-                      if (status == 'approved')
+                      if (isApproved)
                         GestureDetector(
                           onTap: () => _sharePost(post),
                           child: Container(
