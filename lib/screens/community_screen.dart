@@ -1740,7 +1740,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
   }
 
   Widget _buildResourceCardFromData(Map<String, dynamic> resource) {
-    final title = resource['description'] ?? 'No description';
+    final title = resource['title'] ?? 'No title';
     final imagePath = resource['image_link'] ?? '';
     final colors = _getGradientColorsForType(resource['type'] ?? '');
 
@@ -1844,8 +1844,10 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
   }
 
   void _showResourceDetailDialog(Map<String, dynamic> resource) {
-    final title = resource['description'] ?? 'No description';
+    final title = resource['title'] ?? 'No description';
+    final description = resource['description'] ?? 'No description';
     final type = resource['type'] ?? 'Safety Resource';
+    final policeStation = resource['police_station'];
     final imagePath = resource['image_link'] ?? '';
     final colors = _getGradientColorsForType(resource['type'] ?? '');
 
@@ -2020,16 +2022,77 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                             ],
                           ),
 
+                        // Police station info (if available)
+                        if (policeStation != null && policeStation.toString().isNotEmpty)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.location_on,
+                                    size: 18,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Provided by: $policeStation',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey.shade700,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
+
                         // Title
                         Text(
                           title,
                           style: const TextStyle(
-                            fontSize: 24,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                             color: Colors.black,
                           ),
                         ),
+                        const SizedBox(height: 16),
+
+                        // Description Label
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF6B46C1).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: const Color(0xFF6B46C1).withOpacity(0.3),
+                            ),
+                          ),
+                          child: Text(
+                            'DESCRIPTION',
+                            style: const TextStyle(
+                              color: Color(0xFF6B46C1),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 12),
+
+                        // Description - Main Content
+                        Text(
+                          description,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
 
                         // Divider
                         Container(
