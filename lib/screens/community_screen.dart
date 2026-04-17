@@ -766,6 +766,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     final contentController = TextEditingController();
     final hashtagsController = TextEditingController();
     File? selectedImage;
+    String? validationMessage;
 
     showDialog(
       context: context,
@@ -778,6 +779,37 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Validation message at the top
+                    if (validationMessage != null)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: Colors.red.shade700,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                validationMessage!,
+                                style: TextStyle(
+                                  color: Colors.red.shade700,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     TextField(
                       controller: titleController,
                       decoration: const InputDecoration(
@@ -897,10 +929,22 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                     final content = contentController.text.trim();
                     final hashtagsText = hashtagsController.text.trim();
 
+                    // Clear previous validation message
+                    setDialogState(() {
+                      validationMessage = null;
+                    });
+
+                    // Validate inputs
                     if (title.isEmpty || content.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please fill in title and content')),
-                      );
+                      setDialogState(() {
+                        if (title.isEmpty && content.isEmpty) {
+                          validationMessage = 'Please enter both title and content';
+                        } else if (title.isEmpty) {
+                          validationMessage = 'Please enter a title for your post';
+                        } else {
+                          validationMessage = 'Please enter content for your post';
+                        }
+                      });
                       return;
                     }
 
