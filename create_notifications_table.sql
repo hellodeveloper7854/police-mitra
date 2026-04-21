@@ -43,14 +43,14 @@ CREATE TRIGGER service_assignment_notification_trigger
     FOR EACH ROW
     EXECUTE FUNCTION create_service_assignment_notification();
 
--- Function to create notification for new community posts (only for approved posts)
+-- Function to create notification for new community posts (only for approved/verified posts)
 CREATE OR REPLACE FUNCTION create_community_post_notification()
 RETURNS TRIGGER AS $$
 DECLARE
     target_user RECORD;
 BEGIN
-    -- Only create notification for approved posts
-    IF NEW.status = 'approved' THEN
+    -- Only create notification for approved or verified posts
+    IF NEW.status = 'approved' OR NEW.status = 'verified' THEN
         -- Send notification to all verified users except the post creator
         FOR target_user IN
             SELECT email FROM public.registrations

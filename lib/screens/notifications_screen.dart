@@ -190,6 +190,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return Icons.library_books;
       case 'system_message':
         return Icons.notifications;
+      case 'certificate_assigned':
+        return Icons.card_membership;
+      case 'post_approved':
+        return Icons.check_circle;
+      case 'post_rejected':
+        return Icons.cancel;
       default:
         return Icons.notification_important;
     }
@@ -204,6 +210,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       case 'new_resource':
         return const Color(0xFF10B981);
       case 'system_message':
+        return const Color(0xFFEF4444);
+      case 'certificate_assigned':
+        return const Color(0xFF8B5CF6);
+      case 'post_approved':
+        return const Color(0xFF10B981);
+      case 'post_rejected':
         return const Color(0xFFEF4444);
       default:
         return Colors.grey;

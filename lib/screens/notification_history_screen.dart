@@ -204,6 +204,14 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
         return Icons.people;
       case 'new_resource':
         return Icons.library_books;
+      case 'system_message':
+        return Icons.notifications;
+      case 'certificate_assigned':
+        return Icons.card_membership;
+      case 'post_approved':
+        return Icons.check_circle;
+      case 'post_rejected':
+        return Icons.cancel;
       case 'community':
         return Icons.campaign;
       case 'regular':
@@ -220,6 +228,14 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
         return const Color(0xFFF5C563);
       case 'new_resource':
         return const Color(0xFF10B981);
+      case 'system_message':
+        return const Color(0xFFEF4444);
+      case 'certificate_assigned':
+        return const Color(0xFF8B5CF6);
+      case 'post_approved':
+        return const Color(0xFF10B981);
+      case 'post_rejected':
+        return const Color(0xFFEF4444);
       case 'community':
         return const Color(0xFF3B82F6);
       case 'regular':

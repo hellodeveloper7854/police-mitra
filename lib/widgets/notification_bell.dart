@@ -18,12 +18,32 @@ class NotificationBell extends StatefulWidget {
   State<NotificationBell> createState() => _NotificationBellState();
 }
 
-class _NotificationBellState extends State<NotificationBell> {
+class _NotificationBellState extends State<NotificationBell> with WidgetsBindingObserver {
   int _unreadCount = 0;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _fetchUnreadCount();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Refresh when app returns to foreground
+      _fetchUnreadCount();
+    }
+  }
+
+  // Public method to refresh count
+  void refreshCount() {
     _fetchUnreadCount();
   }
 
@@ -34,7 +54,7 @@ class _NotificationBellState extends State<NotificationBell> {
 
       if (email == null) return;
 
-      // Count unread regular notifications
+      // Count unread regular notifications from notifications table
       final regularResponse = await Supabase.instance.client
           .from('notifications')
           .select('id')
@@ -45,10 +65,38 @@ class _NotificationBellState extends State<NotificationBell> {
 
       int pendingCount = 0;
 
-      // Only count pending notifications if includeCommunityNotifications is true
+      // Count pending community notifications that need replies
       if (widget.includeCommunityNotifications) {
-        final pendingNotifications = await CommunityNotificationService().getPendingNotifications();
-        pendingCount = pendingNotifications.length;
+        try {
+          // Get all community notification IDs sent to this user
+          final recipientsResponse = await Supabase.instance.client
+              .from('notification_recipients')
+              .select('notification_id')
+              .eq('user_email', email)
+              .eq('sent_status', 'sent');
+
+          if (recipientsResponse.isNotEmpty) {
+            final notificationIds = recipientsResponse
+                .map((r) => r['notification_id'] as int)
+                .toList();
+
+            // Check which ones don't have replies yet
+            for (var notificationId in notificationIds) {
+              final hasReply = await Supabase.instance.client
+                  .from('notification_replies')
+                  .select('id')
+                  .eq('notification_id', notificationId)
+                  .eq('user_email', email)
+                  .maybeSingle();
+
+              if (hasReply == null) {
+                pendingCount++;
+              }
+            }
+          }
+        } catch (e) {
+          print('Error fetching pending community notifications: $e');
+        }
       }
 
       // Total unread count
@@ -59,6 +107,8 @@ class _NotificationBellState extends State<NotificationBell> {
           _unreadCount = totalCount;
         });
       }
+
+      print('🔔 Notification count: $totalCount (regular: $regularCount, pending: $pendingCount)');
     } catch (e) {
       print('Error fetching unread count: $e');
     }
