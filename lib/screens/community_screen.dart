@@ -312,6 +312,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     final status = (post['status'] ?? 'pending').toString().toLowerCase().trim();
     final isPending = status == 'pending';
     final isApproved = status == 'verified';
+    final isRejected = status == 'rejected';
     final isMyPost = _currentUserEmail != null && post['user_email'] == _currentUserEmail;
 
     String timeAgo;
@@ -1264,6 +1265,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     final status = (post['status'] ?? 'pending').toString().toLowerCase().trim();
     final isPending = status == 'pending';
     final isApproved = status == 'verified';
+    final isRejected = status == 'rejected';
     final isMyPost = _currentUserEmail != null && post['user_email'] == _currentUserEmail;
 
     String timeAgo;
@@ -1351,33 +1353,61 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                             ],
                           ),
                         )
-                      : Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade100,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.green.shade300),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.verified,
-                                size: 14,
-                                color: Colors.green.shade700,
+                      : status == 'rejected'
+                          ? Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade100,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.red.shade300),
                               ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Verified',
-                                style: TextStyle(
-                                  color: Colors.green.shade700,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.cancel,
+                                    size: 14,
+                                    color: Colors.red.shade700,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Rejected',
+                                    style: TextStyle(
+                                      color: Colors.red.shade700,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
+                            )
+                          : Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade100,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.green.shade300),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.verified,
+                                    size: 14,
+                                    color: Colors.green.shade700,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Verified',
+                                    style: TextStyle(
+                                      color: Colors.green.shade700,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
               ],
             ),
 
