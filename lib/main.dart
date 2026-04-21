@@ -23,6 +23,7 @@ import 'screens/feedback_screen.dart';
 import 'screens/feedback_history_screen.dart';
 import 'screens/settings_reset_password_screen.dart';
 import 'screens/notifications_screen.dart';
+import 'screens/notification_history_screen.dart';
 import 'screens/certificates_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/fcm_service.dart';
@@ -291,6 +292,12 @@ final GoRouter _router = GoRouter(
       path: '/notifications',
       builder: (BuildContext context, GoRouterState state) {
         return const NotificationsScreen();
+      },
+    ),
+    GoRoute(
+      path: '/notification-history',
+      builder: (BuildContext context, GoRouterState state) {
+        return const NotificationHistoryScreen();
       },
     ),
   ],

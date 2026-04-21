@@ -120,6 +120,17 @@ class SettingsScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   _buildOptionCard(
                     context,
+                    'My Notifications History',
+                    'View your notification history with replies',
+                    Icons.history,
+                    const LinearGradient(
+                      colors: [Color(0xFFffd89b), Color(0xFF19547b)],
+                    ),
+                    () => context.push('/notification-history'),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildOptionCard(
+                    context,
                     'Feedback',
                     'Share your experience with us',
                     Icons.star_outline,
