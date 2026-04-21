@@ -1861,7 +1861,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
             borderRadius: BorderRadius.circular(16),
           ),
           child: Container(
-            constraints: const BoxConstraints(maxHeight: 700),
+            constraints: const BoxConstraints(maxHeight: 580),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -1950,11 +1950,12 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                                     ? Image.network(
                                         imagePath,
                                         width: double.infinity,
+                                        height: 180,
                                         fit: BoxFit.cover,
                                         errorBuilder: (context, error, stackTrace) {
                                           return Container(
                                             width: double.infinity,
-                                            height: 250,
+                                            height: 180,
                                             decoration: BoxDecoration(
                                               gradient: LinearGradient(
                                                 colors: colors,
@@ -1976,7 +1977,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                                           if (loadingProgress == null) return child;
                                           return Container(
                                             width: double.infinity,
-                                            height: 250,
+                                            height: 180,
                                             decoration: BoxDecoration(
                                               gradient: LinearGradient(
                                                 colors: colors,
@@ -1996,11 +1997,12 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                                     : Image.asset(
                                         imagePath,
                                         width: double.infinity,
+                                        height: 180,
                                         fit: BoxFit.cover,
                                         errorBuilder: (context, error, stackTrace) {
                                           return Container(
                                             width: double.infinity,
-                                            height: 250,
+                                            height: 180,
                                             decoration: BoxDecoration(
                                               gradient: LinearGradient(
                                                 colors: colors,
@@ -2020,7 +2022,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                                         },
                                       ),
                               ),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 16),
                             ],
                           ),
 
@@ -2055,12 +2057,12 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                         Text(
                           title,
                           style: const TextStyle(
-                            fontSize: 22,
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: Colors.black,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
 
                         // Description Label
                         Container(
@@ -2088,13 +2090,13 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                         Text(
                           description,
                           style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                             color: Colors.black87,
                             height: 1.5,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
 
                         // Divider
                         Container(
