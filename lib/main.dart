@@ -8,6 +8,7 @@ import 'screens/forgot_password_screen.dart';
 import 'screens/reset_password_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/assigned_services_screen.dart';
+import 'widgets/notification_bell.dart';
 import 'screens/contact_police_screen.dart';
 import 'screens/helpline_screen.dart';
 import 'screens/cyber_security_screen.dart';
@@ -292,6 +293,11 @@ final GoRouter _router = GoRouter(
       path: '/notifications',
       builder: (BuildContext context, GoRouterState state) {
         return const NotificationsScreen();
+      },
+      onExit: (BuildContext context, GoRouterState state) async {
+        // Refresh notification count when leaving notifications screen
+        notificationBellKey.currentState?.refreshCount();
+        return true;
       },
     ),
     GoRoute(

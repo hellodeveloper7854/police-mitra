@@ -156,7 +156,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           .delete()
           .eq('id', notificationId);
 
-      _fetchNotifications();
+      await _fetchNotifications();
     } catch (e) {
       print('Error deleting notification: $e');
     }

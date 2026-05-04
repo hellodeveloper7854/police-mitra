@@ -15,7 +15,7 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingObserver {
   bool _isAvailable = false; // Initial status
   Timer? _timer;
   Duration _elapsedTime = Duration.zero;
@@ -24,14 +24,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _fetchAvailabilityStatus();
     _updateFCMToken(); // Add FCM token refresh
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Refresh notification bell when app returns to foreground
+    if (state == AppLifecycleState.resumed) {
+      notificationBellKey.currentState?.refreshCount();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Refresh notification count when returning from navigation
+    // This ensures the count updates when user returns from notifications screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        notificationBellKey.currentState?.refreshCount();
+      }
+    });
   }
 
   Future<void> _fetchAvailabilityStatus() async {
@@ -311,7 +334,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         actions: [
-          const NotificationBell(includeCommunityNotifications: true),
+          NotificationBell(
+            key: notificationBellKey,
+            includeCommunityNotifications: true,
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => context.push('/settings'),
